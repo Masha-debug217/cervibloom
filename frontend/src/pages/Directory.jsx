@@ -71,7 +71,7 @@ export default function Directory() {
       ))}
       {filtered.length === 0 && !error && (
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-          No facilities yet — add them via the Django admin, or run the seed script.
+          No facilities yet. Add them in the Django admin, or run the seed script.
         </p>
       )}
       <p style={{ maxWidth: 640, margin: '24px auto 0', fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.6 }}>

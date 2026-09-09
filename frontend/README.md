@@ -5,21 +5,22 @@
 npm install
 npm run dev
 ```
-Opens at http://localhost:5173/ — make sure the Django backend is running
-at http://127.0.0.1:8000/ at the same time (see backend/README.md), otherwise
+Opens at http://localhost:5173/. Run the Django backend at
+http://127.0.0.1:8000/ at the same time (see backend/README.md), or the
 API calls will fail.
 
 ## Structure
-- `src/api/client.js` — the Axios instance every page uses to talk to Django.
-  Change `API_BASE` here when you deploy.
-- `src/context/AuthContext.jsx` — handles login/register/logout and knows
-  who's currently signed in (via JWT stored in localStorage).
-- `src/pages/` — one file per page (Home, InfoHub, Directory, Dashboard,
-  VolunteerDonate, Auth).
-- `src/theme.css` — the whole design system (colors, light/dark mode,
-  component styles) carried over from the original prototype.
-- `src/App.jsx` — routing. Directory, Dashboard, and Volunteer&Donate are
-  wrapped in `<ProtectedRoute>` — logged-out users get redirected to `/auth`.
+- `src/api/client.js` is the Axios instance every page uses to talk to
+  Django. Change `API_BASE` here when you deploy.
+- `src/context/AuthContext.jsx` handles login, register, and logout, and
+  tracks who is currently signed in via a JWT stored in localStorage.
+- `src/pages/` has one file per page: Home, InfoHub, Directory, Dashboard,
+  VolunteerDonate, Admin, and Auth.
+- `src/theme.css` is the whole design system: colors, light and dark mode,
+  and component styles carried over from the original prototype.
+- `src/App.jsx` holds the routing. Dashboard and Volunteer & Donate require
+  a logged-in user, and the Admin console also requires an admin account.
+  Anyone not signed in is sent to `/auth`.
 
 ## Before your defense
 1. Run the backend's `seed_data` command so the directory/FAQ aren't empty

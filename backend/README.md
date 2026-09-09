@@ -9,7 +9,7 @@ reminders, volunteer applications, and simulated donations.
 - **Python 3.12 or newer.** This is a hard requirement: `requirements.txt`
   pins `Django==6.0.7`, and Django 6.0 refuses to install on Python 3.11 or
   earlier (`ERROR: No matching distribution found for Django==6.0.7`). If you
-  must run on Python 3.11, change the pin to `Django>=5.2,<6` — the code uses
+  must run on Python 3.11, change the pin to `Django>=5.2,<6`. The code uses
   no 6.0-only APIs.
 - Node 18+ for the separate React frontend (see `../frontend`).
 

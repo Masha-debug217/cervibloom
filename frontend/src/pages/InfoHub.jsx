@@ -36,12 +36,12 @@ export default function InfoHub() {
     <div className="page container">
       <div className="section-head">
         <h2>Info Hub</h2>
-        <p>Plain-English, medically grounded answers — no jargon, no scare tactics.</p>
+        <p>Plain-English, medically grounded answers with no jargon and no scare tactics.</p>
       </div>
       {error && <div className="error-box" style={{ maxWidth: 640, margin: '0 auto 20px' }}>{error}</div>}
 
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
-        {faqs.length === 0 && !error && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No content yet — add FAQItems in the Django admin panel.</p>}
+        {faqs.length === 0 && !error && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No content yet. Add FAQ items in the Django admin panel.</p>}
         {faqs.map(f => (
           <div className="faq-item" key={f.id}>
             <div className="faq-q" onClick={() => setOpenId(openId === f.id ? null : f.id)}>
@@ -88,7 +88,7 @@ export default function InfoHub() {
           </button>
         </form>
         <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
-          This searches the verified answers above by keyword — no AI, no personal data stored.
+          This searches the verified answers above by keyword. No AI is used, and nothing you type is stored.
         </p>
 
         {search && (

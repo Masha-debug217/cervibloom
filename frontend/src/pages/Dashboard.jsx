@@ -163,7 +163,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>No reminder set yet — an admin can add one for you.</p>
+              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>No reminder set yet. An admin can add one for you.</p>
             )}
             <Link className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }} to="/directory">Find a center near me</Link>
           </div>
@@ -173,7 +173,8 @@ export default function Dashboard() {
             {logs.map(l => (
               <div key={l.id} style={{ padding: '9px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
                 <span className="tag" style={{ marginRight: 8 }}>{tiers[l.risk_tier]?.label || l.risk_tier || 'n/a'}</span>
-                {l.symptoms || 'No symptoms'} — {new Date(l.created_at).toLocaleDateString()}
+                {l.symptoms || 'No symptoms'}
+                <span style={{ color: 'var(--text-secondary)', marginLeft: 6 }}>{new Date(l.created_at).toLocaleDateString()}</span>
               </div>
             ))}
           </div>

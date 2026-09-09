@@ -129,7 +129,7 @@ function FacilitiesTab() {
             <td style={cellStyle}>{f.name}</td>
             <td style={cellStyle}>{f.county}</td>
             <td style={cellStyle}>{f.services}</td>
-            <td style={cellStyle}>{f.is_wics_site ? 'Yes' : '—'}</td>
+            <td style={cellStyle}>{f.is_wics_site ? 'Yes' : 'No'}</td>
             <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>
               <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => startEdit(f)}>Edit</button>{' '}
               <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => remove(f.id)}>Delete</button>
@@ -174,7 +174,7 @@ function VolunteersTab() {
           {rows.map((a) => (
             <tr key={a.id}>
               <td style={cellStyle}>{a.volunteer_username}</td>
-              <td style={cellStyle}>{a.volunteer_county || '—'}</td>
+              <td style={cellStyle}>{a.volunteer_county || 'Not given'}</td>
               <td style={{ ...cellStyle, maxWidth: 320 }}>{a.message}</td>
               <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{new Date(a.submitted_at).toLocaleDateString()}</td>
               <td style={cellStyle}>

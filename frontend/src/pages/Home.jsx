@@ -5,7 +5,7 @@ export default function Home() {
     <div className="page container">
       <div className="hero">
         <h1>Know your risk. Find your nearest care.</h1>
-        <p>CerviBloom brings verified HPV &amp; cervical cancer information, screening reminders, and real public screening centers together in one place — built for Kenyan women and the volunteers supporting them.</p>
+        <p>CerviBloom brings verified HPV &amp; cervical cancer information, screening reminders, and real public screening centers together in one place. It is built for Kenyan women and the volunteers supporting them.</p>
         <div className="hero-actions">
           <Link className="btn btn-primary" to="/info-hub">Learn about HPV</Link>
           <Link className="btn btn-outline" to="/directory">Find a screening center</Link>

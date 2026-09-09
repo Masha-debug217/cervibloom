@@ -32,7 +32,7 @@ class Command(BaseCommand):
             ("Does the HPV vaccine cause infertility?", "No credible scientific evidence supports this claim. It has been studied extensively and does not affect fertility.", 2),
             ("What's the difference between VIA and a Pap smear?", "VIA (Visual Inspection with Acetic Acid) is a low-cost screening method using a vinegar-based solution, common in Kenyan public facilities. A Pap smear examines cervical cells under a microscope and requires more lab capacity.", 3),
             ("How often should I get screened?", "WHO recommends women be screened at least once by age 35 and again by 45, with more frequent screening depending on individual risk and prior results. Always confirm timing with a healthcare provider.", 4),
-            ("I tested HPV positive — does that mean I have cancer?", "No. HPV is very common and most infections clear on their own. A positive result means follow-up screening or triage is needed, not a cancer diagnosis.", 5),
+            ("I tested HPV positive. Does that mean I have cancer?", "No. HPV is very common and most infections clear on their own. A positive result means follow-up screening or triage is needed, not a cancer diagnosis.", 5),
         ]
         for q, a, order in faqs:
             obj, created = FAQItem.objects.get_or_create(question=q, defaults={'answer': a, 'order': order})

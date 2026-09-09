@@ -49,7 +49,7 @@ export default function VolunteerDonate() {
       setDonDone(true);
       loadHistory();
     } catch {
-      setError('Could not submit — make sure you are logged in.');
+      setError('Could not submit. Make sure you are logged in.');
     }
   }
 
@@ -74,7 +74,7 @@ export default function VolunteerDonate() {
             <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} required />
           </div>
           <button className="btn btn-primary" style={{ width: '100%' }}>Submit application</button>
-          {volDone && <div className="success-box">Thanks — your volunteer application has been received.</div>}
+          {volDone && <div className="success-box">Thanks. Your volunteer application has been received.</div>}
         </form>
       )}
 
@@ -110,7 +110,7 @@ export default function VolunteerDonate() {
               Give anonymously (don't show my name in any acknowledgement)
             </label>
             <button className="btn btn-primary" style={{ width: '100%' }}>Donate (simulated)</button>
-            {donDone && <div className="success-box">This is a simulated transaction — no real payment was processed.</div>}
+            {donDone && <div className="success-box">This is a simulated transaction. No real payment was processed.</div>}
           </form>
 
           <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 12, lineHeight: 1.5 }}>

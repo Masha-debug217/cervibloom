@@ -83,7 +83,7 @@ export default function App() {
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/auth" element={<Auth />} />
         </Routes>
-        <footer>CerviBloom — final year project · not a diagnostic tool · always consult a healthcare provider</footer>
+        <footer>CerviBloom is a final year project. It is not a diagnostic tool, so always consult a healthcare provider.</footer>
       </BrowserRouter>
     </AuthProvider>
   );
