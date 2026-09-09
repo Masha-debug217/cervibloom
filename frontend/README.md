@@ -24,6 +24,9 @@ API calls will fail.
 
 ## Before your defense
 1. Run the backend's `seed_data` command so the directory/FAQ aren't empty
-2. Register a test Patient, Volunteer, and Admin account so you can
-   demo all three roles
-3. `npm run build` to confirm it still compiles cleanly (already tested here - it does)
+2. Register a test Patient and a test Volunteer through the sign-up form so
+   you can demo those two roles
+3. Create the Admin account from the backend with
+   `python manage.py createsuperuser`. The sign-up form cannot create an
+   Admin; open registration only makes Patient and Volunteer accounts.
+4. `npm run build` to confirm it still compiles cleanly (already tested here - it does)
