@@ -2,11 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// Admin accounts are deliberately NOT offered here - they are created with
+// `manage.py createsuperuser` (see backend/README.md). Open registration
+// only mints Patient / Volunteer accounts, and the API rejects role=ADMIN.
 const ROLES = [
   { value: 'PATIENT', label: 'Patient', desc: 'Track symptoms, get screening reminders, find care near you.' },
   { value: 'VOLUNTEER', label: 'Volunteer', desc: 'Support outreach programs and community screening drives.' },
-  { value: 'ADMIN', label: 'Admin', desc: 'Manage facilities, volunteers, and platform content.' },
 ];
+
+function destinationFor(role) {
+  if (role === 'ADMIN') return '/admin';
+  if (role === 'VOLUNTEER') return '/volunteer';
+  return '/dashboard';
+}
 
 export default function Auth() {
   const [mode, setMode] = useState('choose'); // choose | register | login
@@ -26,8 +34,8 @@ export default function Auth() {
     e.preventDefault();
     setError(''); setBusy(true);
     try {
-      await register({ ...form, role });
-      navigate(role === 'PATIENT' ? '/dashboard' : role === 'VOLUNTEER' ? '/volunteer' : '/');
+      const u = await register({ ...form, role });
+      navigate(destinationFor(u?.role ?? role));
     } catch (err) {
       setError(err.response?.data ? JSON.stringify(err.response.data) : 'Registration failed.');
     } finally { setBusy(false); }
@@ -37,8 +45,8 @@ export default function Auth() {
     e.preventDefault();
     setError(''); setBusy(true);
     try {
-      await login(form.username, form.password);
-      navigate('/dashboard');
+      const u = await login(form.username, form.password);
+      navigate(destinationFor(u?.role));
     } catch {
       setError('Incorrect username or password.');
     } finally { setBusy(false); }

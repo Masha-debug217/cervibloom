@@ -13,10 +13,12 @@ export function AuthProvider({ children }) {
     try {
       const res = await client.get('/auth/me/');
       setUser(res.data);
+      return res.data;
     } catch {
       setUser(null);
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      return null;
     } finally {
       setLoading(false);
     }
@@ -34,13 +36,13 @@ export function AuthProvider({ children }) {
     const res = await client.post('/auth/login/', { username, password });
     localStorage.setItem('access_token', res.data.access);
     localStorage.setItem('refresh_token', res.data.refresh);
-    await fetchMe();
+    return fetchMe(); // resolves to the logged-in user (or null)
   }
 
   async function register(payload) {
     await client.post('/auth/register/', payload);
     // After registering, log them straight in for a smoother flow.
-    await login(payload.username, payload.password);
+    return login(payload.username, payload.password);
   }
 
   function logout() {

@@ -6,6 +6,7 @@ import InfoHub from './pages/InfoHub';
 import Directory from './pages/Directory';
 import Dashboard from './pages/Dashboard';
 import VolunteerDonate from './pages/VolunteerDonate';
+import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import './theme.css';
 
@@ -14,6 +15,16 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="container" style={{ padding: 48 }}>Loading…</div>;
   if (!user) return <Navigate to="/auth" replace />;
+  return children;
+}
+
+// Like ProtectedRoute, but also requires role === ADMIN. Non-admins are
+// bounced home rather than to /auth (they ARE logged in, just not allowed).
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="container" style={{ padding: 48 }}>Loading…</div>;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (user.role !== 'ADMIN') return <Navigate to="/" replace />;
   return children;
 }
 
@@ -28,6 +39,8 @@ function Nav() {
     document.documentElement.setAttribute('data-theme', next);
   }
 
+  const role = user?.role;
+
   return (
     <nav>
       <NavLink to="/" className="brand">
@@ -38,8 +51,9 @@ function Nav() {
         <NavLink to="/">Home</NavLink>
         <NavLink to="/info-hub">Info Hub</NavLink>
         <NavLink to="/directory">Screening Directory</NavLink>
-        <NavLink to="/dashboard">Dashboard</NavLink>
-        <NavLink to="/volunteer">Volunteer &amp; Donate</NavLink>
+        {role === 'PATIENT' && <NavLink to="/dashboard">Dashboard</NavLink>}
+        {(role === 'PATIENT' || role === 'VOLUNTEER') && <NavLink to="/volunteer">Volunteer &amp; Donate</NavLink>}
+        {role === 'ADMIN' && <NavLink to="/admin">Admin</NavLink>}
       </div>
       <div className="nav-right">
         <button className="icon-btn" onClick={toggleTheme}>{theme === 'light' ? '☾' : '☀'}</button>
@@ -63,9 +77,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/info-hub" element={<InfoHub />} />
-          <Route path="/directory" element={<ProtectedRoute><Directory /></ProtectedRoute>} />
+          <Route path="/directory" element={<Directory />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/volunteer" element={<ProtectedRoute><VolunteerDonate /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/auth" element={<Auth />} />
         </Routes>
         <footer>CerviBloom — final year project · not a diagnostic tool · always consult a healthcare provider</footer>

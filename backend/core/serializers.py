@@ -1,8 +1,11 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
     VolunteerApplication, DonationRecord, FAQItem
 )
+
+User = get_user_model()
 
 
 class FacilitySerializer(serializers.ModelSerializer):
@@ -20,16 +23,35 @@ class SymptomLogSerializer(serializers.ModelSerializer):
 
 
 class ScreeningReminderSerializer(serializers.ModelSerializer):
+    # Declared explicitly with validators=[] so DRF does NOT attach the
+    # implicit OneToOne UniqueValidator - the viewset intentionally treats a
+    # repeat POST for the same patient as an update (update_or_create).
+    patient = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), validators=[]
+    )
+
     class Meta:
         model = ScreeningReminder
-        fields = ['id', 'next_due_date', 'guidance_note']
+        fields = ['id', 'patient', 'next_due_date', 'guidance_note']
+        # `patient` is required on write (admin sets a reminder for a given
+        # patient) and simply echoed back on read.
 
 
 class VolunteerApplicationSerializer(serializers.ModelSerializer):
+    # Read-only so the admin list can show who applied without exposing
+    # anything writable.
+    volunteer_username = serializers.CharField(source='volunteer.username', read_only=True)
+    volunteer_county = serializers.CharField(source='volunteer.county', read_only=True)
+
     class Meta:
         model = VolunteerApplication
-        fields = ['id', 'message', 'status', 'submitted_at']
-        read_only_fields = ['status']  # only admin changes status, via a separate action
+        fields = [
+            'id', 'message', 'status', 'submitted_at',
+            'volunteer_username', 'volunteer_county',
+        ]
+        # status is changed only by an admin, via the set_status action
+        # (PATCH /api/volunteer-applications/{id}/status/).
+        read_only_fields = ['status']
 
 
 class DonationRecordSerializer(serializers.ModelSerializer):
