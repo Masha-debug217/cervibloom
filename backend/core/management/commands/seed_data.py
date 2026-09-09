@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from core.models import Facility, FAQItem
+from core.models import Facility, FAQItem, MythFact
 
 
 class Command(BaseCommand):
@@ -37,5 +37,31 @@ class Command(BaseCommand):
         for q, a, order in faqs:
             obj, created = FAQItem.objects.get_or_create(question=q, defaults={'answer': a, 'order': order})
             self.stdout.write(f"{'Created' if created else 'Already exists'}: {obj.question}")
+
+        myths = [
+            ("The HPV vaccine encourages young people to become sexually active.",
+             "Studies following vaccinated and unvaccinated groups show no difference in sexual behaviour. The vaccine is given early simply because it works best before any exposure to HPV.",
+             MythFact.Category.VACCINE, 1),
+            ("Only women who have many sexual partners get cervical cancer.",
+             "Almost all sexually active people encounter HPV at some point. A single partner is enough for transmission, so screening matters for everyone with a cervix.",
+             MythFact.Category.TRANSMISSION, 2),
+            ("If I feel healthy, I don't need screening.",
+             "Early cervical changes and early cancer usually cause no symptoms at all. Screening is what catches them while they are easy to treat.",
+             MythFact.Category.SCREENING, 3),
+            ("A positive HPV test means I have cancer.",
+             "It does not. Most HPV infections clear on their own. A positive test means you need follow-up checks, not that you have cancer.",
+             MythFact.Category.SCREENING, 4),
+            ("Cervical cancer cannot be treated in Kenya.",
+             "Pre-cancer is treated at many public facilities with quick outpatient procedures, and treatment services for cancer are expanding under the national elimination plan.",
+             MythFact.Category.TREATMENT, 5),
+            ("The HPV vaccine causes infertility.",
+             "There is no credible evidence for this. Large safety reviews have found no effect on the ability to get pregnant.",
+             MythFact.Category.VACCINE, 6),
+        ]
+        for myth, fact, category, order in myths:
+            obj, created = MythFact.objects.get_or_create(
+                myth=myth, defaults={'fact': fact, 'category': category, 'order': order}
+            )
+            self.stdout.write(f"{'Created' if created else 'Already exists'}: {obj.myth[:48]}...")
 
         self.stdout.write(self.style.SUCCESS('Seeding complete.'))

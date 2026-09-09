@@ -4,6 +4,15 @@ from django.conf import settings
 
 class Facility(models.Model):
     """A real public screening center. Admin-managed."""
+
+    class StockStatus(models.TextChoices):
+        # UNKNOWN is the default so seeded real facilities don't claim a
+        # supply level nobody has actually reported. Admins set a real value.
+        UNKNOWN = "UNKNOWN", "Not reported"
+        IN_STOCK = "IN_STOCK", "In stock"
+        LOW_STOCK = "LOW_STOCK", "Low stock"
+        OUT_OF_STOCK = "OUT_OF_STOCK", "Out of stock"
+
     name = models.CharField(max_length=200)
     county = models.CharField(max_length=100)
     address = models.CharField(max_length=255, blank=True)
@@ -18,15 +27,35 @@ class Facility(models.Model):
         help_text="Where this data was verified from (WHO/MOH report, etc.)"
     )
     is_wics_site = models.BooleanField(default=False)
+    hpv_vaccine_stock = models.CharField(
+        max_length=20, choices=StockStatus.choices, default=StockStatus.UNKNOWN
+    )
+    pap_smear_kit_stock = models.CharField(
+        max_length=20, choices=StockStatus.choices, default=StockStatus.UNKNOWN
+    )
 
     def __str__(self):
         return f"{self.name} ({self.county})"
 
 
 class SymptomLog(models.Model):
-    """A patient's self-reported symptom entry."""
+    """
+    A patient's Symptom Navigator entry.
+
+    `answers` holds the structured yes/no responses keyed by question
+    (see core/symptom_navigator.py). `risk_tier` is the deterministic tier
+    computed server-side from those answers. `symptoms` is kept as a short
+    human-readable summary string for the history list and Django admin.
+    """
+    class RiskTier(models.TextChoices):
+        ROUTINE = "ROUTINE", "Routine"
+        DISCUSS = "DISCUSS", "Discuss at next visit"
+        SEEK_CARE = "SEEK_CARE", "Seek care soon"
+
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='symptom_logs')
-    symptoms = models.CharField(max_length=500, help_text="Comma-separated symptom list")
+    symptoms = models.CharField(max_length=500, blank=True, help_text="Auto-generated summary of the 'yes' answers")
+    answers = models.JSONField(default=dict, blank=True, help_text="Structured yes/no answers keyed by question")
+    risk_tier = models.CharField(max_length=20, choices=RiskTier.choices, blank=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -34,7 +63,7 @@ class SymptomLog(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.patient.username} - {self.created_at.date()}"
+        return f"{self.patient.username} - {self.created_at.date()} ({self.risk_tier or 'n/a'})"
 
 
 class ScreeningReminder(models.Model):
@@ -70,10 +99,15 @@ class DonationRecord(models.Model):
     """
     donor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='donations')
     amount_kes = models.DecimalField(max_digits=10, decimal_places=2)
+    is_anonymous = models.BooleanField(
+        default=False,
+        help_text="If set, the donor asked not to be named in any public acknowledgement.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.donor.username} - KES {self.amount_kes} (simulated)"
+        who = "Anonymous" if self.is_anonymous else self.donor.username
+        return f"{who} - KES {self.amount_kes} (simulated)"
 
 
 class FAQItem(models.Model):
@@ -87,3 +121,29 @@ class FAQItem(models.Model):
 
     def __str__(self):
         return self.question
+
+
+class MythFact(models.Model):
+    """
+    A myth-vs-fact card for the Info Hub. Admin-managed exactly like FAQItem
+    so the content isn't hardcoded in the React app.
+    """
+    class Category(models.TextChoices):
+        VACCINE = "VACCINE", "HPV vaccine"
+        SCREENING = "SCREENING", "Screening"
+        TRANSMISSION = "TRANSMISSION", "Transmission & risk"
+        TREATMENT = "TREATMENT", "Treatment"
+        GENERAL = "GENERAL", "General"
+
+    myth = models.CharField(max_length=255, help_text="The false belief, stated plainly.")
+    fact = models.TextField(help_text="The correction, medically grounded.")
+    category = models.CharField(
+        max_length=20, choices=Category.choices, default=Category.GENERAL
+    )
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.myth

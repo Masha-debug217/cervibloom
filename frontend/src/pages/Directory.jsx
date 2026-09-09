@@ -1,6 +1,25 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
 
+const STOCK_LABELS = {
+  IN_STOCK: 'In stock',
+  LOW_STOCK: 'Low stock',
+  OUT_OF_STOCK: 'Out of stock',
+};
+
+function StockTag({ label, status }) {
+  if (!status || status === 'UNKNOWN' || !STOCK_LABELS[status]) return null;
+  const strong = status === 'OUT_OF_STOCK' || status === 'LOW_STOCK';
+  return (
+    <span
+      className="tag"
+      style={strong ? { background: 'transparent', border: '1px solid var(--primary)' } : undefined}
+    >
+      {label}: {STOCK_LABELS[status]}
+    </span>
+  );
+}
+
 export default function Directory() {
   const [facilities, setFacilities] = useState([]);
   const [search, setSearch] = useState('');
@@ -41,6 +60,8 @@ export default function Directory() {
             <div style={{ marginTop: 8 }}>
               {f.services?.split(',').map(s => <span className="tag" key={s}>{s.trim()}</span>)}
               {f.is_wics_site && <span className="tag">WICS site</span>}
+              <StockTag label="HPV vaccine" status={f.hpv_vaccine_stock} />
+              <StockTag label="Pap kits" status={f.pap_smear_kit_stock} />
             </div>
           </div>
           <a className="btn btn-outline" href={f.latitude && f.longitude ? `https://www.google.com/maps?q=${f.latitude},${f.longitude}` : '#'} target="_blank" rel="noreferrer">

@@ -38,15 +38,20 @@ Server runs at http://127.0.0.1:8000/
 ## Key endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/api/auth/register/` | POST | Create account (any role) |
+| `/api/auth/register/` | POST | Create a Patient or Volunteer account (role=ADMIN is rejected) |
 | `/api/auth/login/` | POST | Get JWT access+refresh tokens |
+| `/api/auth/login/refresh/` | POST | Exchange a refresh token for a new access token |
 | `/api/auth/me/` | GET | Current logged-in user's profile |
-| `/api/facilities/` | GET/POST | Screening directory (write = Admin only) |
-| `/api/faqs/` | GET/POST | Info Hub content (write = Admin only) |
-| `/api/symptom-logs/` | GET/POST | Patient's own symptom entries only |
-| `/api/screening-reminders/` | GET | Patient's own reminder |
-| `/api/volunteer-applications/` | GET/POST | Volunteer's own applications (Admin sees all) |
-| `/api/donations/` | GET/POST | Simulated donations only - no real payment |
+| `/api/facilities/` | GET (public) / POST | Screening directory + stock status (write = Admin only) |
+| `/api/faqs/` | GET (public) / POST | Info Hub content (write = Admin only) |
+| `/api/faqs/search/?q=` | GET (public) | Rule-based keyword search over FAQ content, no LLM |
+| `/api/myths/` | GET (public) / POST | Myth-vs-fact cards (write = Admin only) |
+| `/api/symptom-logs/` | GET/POST | Patient's own Symptom Navigator entries; risk tier computed server-side |
+| `/api/symptom-logs/questions/` | GET | The fixed Navigator question set + tier copy |
+| `/api/screening-reminders/` | GET / POST / PUT | Patient reads own; Admin reads all and writes |
+| `/api/volunteer-applications/` | GET/POST | VOLUNTEER creates own; Admin sees all |
+| `/api/volunteer-applications/{id}/status/` | PATCH | Admin-only: set PENDING/CONTACTED/ACCEPTED |
+| `/api/donations/` | GET/POST | Simulated donations (amount + anonymous flag); donor sees own history |
 | `/admin/` | - | Django admin panel (use createsuperuser above) |
 
 ## Why key decisions were made

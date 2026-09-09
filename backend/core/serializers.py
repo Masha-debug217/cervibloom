@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
-    VolunteerApplication, DonationRecord, FAQItem
+    VolunteerApplication, DonationRecord, FAQItem, MythFact
 )
 
 User = get_user_model()
@@ -17,9 +17,11 @@ class FacilitySerializer(serializers.ModelSerializer):
 class SymptomLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SymptomLog
-        fields = ['id', 'symptoms', 'notes', 'created_at']
-        # 'patient' is set automatically from the logged-in user (see views.py) -
-        # never trust the client to say who they are.
+        fields = ['id', 'symptoms', 'answers', 'risk_tier', 'notes', 'created_at']
+        # 'patient' is set automatically from the logged-in user (see views.py).
+        # 'symptoms' and 'risk_tier' are derived server-side from 'answers' -
+        # the client submits answers, it does not get to assert its own risk.
+        read_only_fields = ['symptoms', 'risk_tier']
 
 
 class ScreeningReminderSerializer(serializers.ModelSerializer):
@@ -57,10 +59,16 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
 class DonationRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = DonationRecord
-        fields = ['id', 'amount_kes', 'created_at']
+        fields = ['id', 'amount_kes', 'is_anonymous', 'created_at']
 
 
 class FAQItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQItem
         fields = ['id', 'question', 'answer', 'order']
+
+
+class MythFactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MythFact
+        fields = ['id', 'myth', 'fact', 'category', 'order']

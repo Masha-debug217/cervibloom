@@ -2,9 +2,38 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from core import symptom_navigator
 from core.models import SymptomLog
 
 User = get_user_model()
+
+
+class SymptomNavigatorScoringTests(APITestCase):
+    """The scoring rule is deterministic and computed server-side."""
+
+    def test_no_symptoms_is_routine(self):
+        self.assertEqual(symptom_navigator.score({}), 'ROUTINE')
+
+    def test_single_non_red_flag_is_discuss(self):
+        self.assertEqual(symptom_navigator.score({'unusual_discharge': True}), 'DISCUSS')
+
+    def test_postmenopausal_bleeding_is_seek_care(self):
+        self.assertEqual(symptom_navigator.score({'postmenopausal_bleeding': True}), 'SEEK_CARE')
+
+    def test_three_symptoms_is_seek_care(self):
+        answers = {'pelvic_pain': True, 'pain_intercourse': True, 'unusual_discharge': True}
+        self.assertEqual(symptom_navigator.score(answers), 'SEEK_CARE')
+
+    def test_risk_tier_is_set_from_answers_not_from_client(self):
+        patient = User.objects.create_user('nav', 'n@e.com', 'testpass123', role='PATIENT')
+        self.client.force_authenticate(patient)
+        resp = self.client.post(
+            '/api/symptom-logs/',
+            {'answers': {'postmenopausal_bleeding': True}, 'risk_tier': 'ROUTINE'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['risk_tier'], 'SEEK_CARE')  # client's 'ROUTINE' ignored
 
 
 class SymptomLogPrivacyTests(APITestCase):
