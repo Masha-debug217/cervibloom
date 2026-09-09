@@ -15,8 +15,11 @@ export default function VolunteerDonate() {
     try {
       await client.post('/volunteer-applications/', { message });
       setVolDone(true); setMessage('');
-    } catch {
-      setError('Could not submit — make sure you are logged in as a Volunteer.');
+    } catch (err) {
+      setError(
+        err.response?.data?.detail ||
+        'Could not submit your application. Volunteer applications can only be sent from a Volunteer account.'
+      );
     }
   }
 

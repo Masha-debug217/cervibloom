@@ -5,13 +5,32 @@ Role-based REST API for CerviBloom: Patient / Volunteer / Admin accounts,
 JWT authentication, screening facility directory, symptom logs, screening
 reminders, volunteer applications, and simulated donations.
 
+## Requirements
+- **Python 3.12 or newer.** This is a hard requirement: `requirements.txt`
+  pins `Django==6.0.7`, and Django 6.0 refuses to install on Python 3.11 or
+  earlier (`ERROR: No matching distribution found for Django==6.0.7`). If you
+  must run on Python 3.11, change the pin to `Django>=5.2,<6` — the code uses
+  no 6.0-only APIs.
+- Node 18+ for the separate React frontend (see `../frontend`).
+
 ## Setup (first time)
 ```bash
+# macOS / Linux
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
 ./venv/bin/python manage.py migrate
+./venv/bin/python manage.py seed_data        # loads real facilities + starter FAQs
 ./venv/bin/python manage.py createsuperuser   # creates an Admin login for /admin/
 ./venv/bin/python manage.py runserver
+```
+```powershell
+# Windows (PowerShell) - use the py launcher to guarantee Python 3.12+
+py -3.13 -m venv venv
+.\venv\Scripts\python -m pip install -r requirements.txt
+.\venv\Scripts\python manage.py migrate
+.\venv\Scripts\python manage.py seed_data
+.\venv\Scripts\python manage.py createsuperuser
+.\venv\Scripts\python manage.py runserver
 ```
 
 Server runs at http://127.0.0.1:8000/

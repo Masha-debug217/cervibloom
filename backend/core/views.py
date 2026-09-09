@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
     VolunteerApplication, DonationRecord, FAQItem
@@ -7,22 +8,21 @@ from .serializers import (
     FacilitySerializer, SymptomLogSerializer, ScreeningReminderSerializer,
     VolunteerApplicationSerializer, DonationRecordSerializer, FAQItemSerializer
 )
-from .permissions import IsAdminRole
+from .permissions import IsAdminRole, IsAdminRoleOrReadOnly
 
 
 class FacilityViewSet(viewsets.ModelViewSet):
-    """Public directory data. Anyone logged in can read; only Admin can edit."""
+    """Public directory data. Anyone (even logged out) can read; only Admin can edit."""
     queryset = Facility.objects.all()
     serializer_class = FacilitySerializer
-    permission_classes = [IsAdminRole]
-    filterset_fields = ['county']
+    permission_classes = [IsAdminRoleOrReadOnly]
 
 
 class FAQItemViewSet(viewsets.ModelViewSet):
-    """Info Hub content. Anyone logged in can read; only Admin can edit."""
+    """Info Hub content. Anyone (even logged out) can read; only Admin can edit."""
     queryset = FAQItem.objects.all()
     serializer_class = FAQItemSerializer
-    permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminRoleOrReadOnly]
 
 
 class SymptomLogViewSet(viewsets.ModelViewSet):
@@ -62,6 +62,12 @@ class VolunteerApplicationViewSet(viewsets.ModelViewSet):
         return VolunteerApplication.objects.filter(volunteer=user)
 
     def perform_create(self, serializer):
+        # Enforced server-side: a Patient or Admin account cannot file a
+        # volunteer application, no matter what the client sends.
+        if self.request.user.role != 'VOLUNTEER':
+            raise PermissionDenied(
+                "Only volunteer accounts can submit a volunteer application."
+            )
         serializer.save(volunteer=self.request.user)
 
 

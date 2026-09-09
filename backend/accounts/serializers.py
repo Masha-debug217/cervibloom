@@ -13,6 +13,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'password', 'role', 'phone_number', 'county']
 
+    def validate_role(self, value):
+        """
+        Open registration must never mint an Admin account.
+        Admins are created via `createsuperuser` or promoted later by
+        an existing admin - not through this public, unauthenticated endpoint.
+        """
+        if value == User.Role.ADMIN:
+            raise serializers.ValidationError(
+                "Admin accounts cannot be created through registration."
+            )
+        return value
+
     def create(self, validated_data):
         # create_user() hashes the password properly - never save raw passwords
         return User.objects.create_user(**validated_data)

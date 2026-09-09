@@ -6,19 +6,25 @@ class Command(BaseCommand):
     help = "Seeds the database with real facility data and starter FAQ content."
 
     def handle(self, *args, **options):
+        # Coordinates are approximate hospital locations (decimal degrees),
+        # good enough to open a useful "Get directions" pin in Google Maps.
         facilities = [
-            dict(name="Kenyatta National Hospital", county="Nairobi", services="VIA, Pap smear, Treatment", source_note="MOH/WHO public reporting", is_wics_site=False),
-            dict(name="Moi Teaching & Referral Hospital", county="Uasin Gishu", services="VIA, Treatment", source_note="MOH/WHO public reporting", is_wics_site=False),
-            dict(name="Bungoma County Referral Hospital", county="Bungoma", services="VIA", source_note="WICS project site", is_wics_site=True),
-            dict(name="Nyandarua County Referral Hospital", county="Nyandarua", services="VIA", source_note="WICS project site", is_wics_site=True),
-            dict(name="Kisumu County Referral Hospital", county="Kisumu", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False),
-            dict(name="Nyeri County Referral Hospital", county="Nyeri", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False),
-            dict(name="Kakamega County General Hospital", county="Kakamega", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False),
-            dict(name="Kisii Teaching & Referral Hospital", county="Kisii", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False),
-            dict(name="Meru Teaching & Referral Hospital", county="Meru", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False),
+            dict(name="Kenyatta National Hospital", county="Nairobi", services="VIA, Pap smear, Treatment", source_note="MOH/WHO public reporting", is_wics_site=False, latitude=-1.3018, longitude=36.8058),
+            dict(name="Moi Teaching & Referral Hospital", county="Uasin Gishu", services="VIA, Treatment", source_note="MOH/WHO public reporting", is_wics_site=False, latitude=0.5167, longitude=35.2833),
+            dict(name="Bungoma County Referral Hospital", county="Bungoma", services="VIA", source_note="WICS project site", is_wics_site=True, latitude=0.5635, longitude=34.5606),
+            dict(name="Nyandarua County Referral Hospital", county="Nyandarua", services="VIA", source_note="WICS project site", is_wics_site=True, latitude=-0.2730, longitude=36.3778),
+            dict(name="Kisumu County Referral Hospital", county="Kisumu", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False, latitude=-0.0917, longitude=34.7680),
+            dict(name="Nyeri County Referral Hospital", county="Nyeri", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False, latitude=-0.4169, longitude=36.9514),
+            dict(name="Kakamega County General Hospital", county="Kakamega", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False, latitude=0.2827, longitude=34.7519),
+            dict(name="Kisii Teaching & Referral Hospital", county="Kisii", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False, latitude=-0.6817, longitude=34.7796),
+            dict(name="Meru Teaching & Referral Hospital", county="Meru", services="Screening (expansion)", source_note="National Cancer Elimination Action Plan", is_wics_site=False, latitude=0.0470, longitude=37.6559),
         ]
         for f in facilities:
             obj, created = Facility.objects.get_or_create(name=f['name'], defaults=f)
+            if not created and (obj.latitude is None or obj.longitude is None):
+                # Backfill coordinates onto rows seeded before this change.
+                obj.latitude, obj.longitude = f['latitude'], f['longitude']
+                obj.save(update_fields=['latitude', 'longitude'])
             self.stdout.write(f"{'Created' if created else 'Already exists'}: {obj.name}")
 
         faqs = [
