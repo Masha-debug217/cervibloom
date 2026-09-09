@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 
+from decouple import config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,8 +21,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1ev72@z=@!yg8x8-b1)15nr=kj@xq(9&$)o!aa^s*&78*&0qva'
+# The real secret key comes from the environment (or a local .env file, which
+# is gitignored). The default below is a placeholder that only lets the dev
+# server boot; it is not secret and must never be used for a deployed site.
+# See backend/.env.example for how to set a real one.
+SECRET_KEY = config('DJANGO_SECRET_KEY', default='insecure-local-dev-key-set-DJANGO_SECRET_KEY-for-real-use')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

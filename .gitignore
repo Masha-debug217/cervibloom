@@ -1,0 +1,18 @@
+# Repo-wide safety net. Package-level .gitignore files carry the rest.
+
+# Never commit real environment files anywhere in the repo.
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Local database
+db.sqlite3
+
+# OS / editor cruft
+.DS_Store

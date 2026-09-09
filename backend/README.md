@@ -35,6 +35,17 @@ py -3.13 -m venv venv
 
 Server runs at http://127.0.0.1:8000/
 
+## Configuration
+
+`SECRET_KEY` is read from the environment with `python-decouple`. For local
+work the built-in placeholder default is enough and no setup is needed. To
+use a real key, copy `.env.example` to `.env` in this directory and set
+`DJANGO_SECRET_KEY`. The `.env` file is gitignored. Generate a key with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
 ## Key endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -66,7 +77,7 @@ Server runs at http://127.0.0.1:8000/
   free hosts wipe SQLite's file on every restart).
 
 ## Next steps for deployment
-1. Set `DEBUG = False` and add your real domain to `ALLOWED_HOSTS` in settings.py
-2. Swap SQLite for Postgres (e.g. Render's free Postgres)
-3. Set `CORS_ALLOWED_ORIGINS` to your real deployed frontend URL
-4. Move `SECRET_KEY` to an environment variable
+1. Set a real `DJANGO_SECRET_KEY` in the deploy environment (see Configuration above)
+2. Set `DEBUG = False` and add your real domain to `ALLOWED_HOSTS` in settings.py
+3. Swap SQLite for Postgres (e.g. Render's free Postgres)
+4. Set `CORS_ALLOWED_ORIGINS` to your real deployed frontend URL
