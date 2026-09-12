@@ -24,10 +24,9 @@ translation editable in the Admin console, falling back to English when
 blank.
 
 ### InfoHub
-Information on Cervical Cancer, causes, prevention, treatment etc
-FAQs
-Q&A
-Myths and Misconceptions and fact
+Done: added an "Understanding Cervical Cancer" section (what it is, causes,
+prevention, signs, treatment) above the existing FAQ and Myth vs. Fact
+sections, all bilingual.
 
 ### Articles
 Science Articles on CC. Bookmarks.

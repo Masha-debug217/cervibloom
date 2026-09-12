@@ -3,12 +3,21 @@ import { Link } from 'react-router-dom';
 import client from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
 
+const LEARN_TOPICS = [
+  { key: 'what', titleKey: 'infohub_learn_what_title', bodyKey: 'infohub_learn_what_body' },
+  { key: 'causes', titleKey: 'infohub_learn_causes_title', bodyKey: 'infohub_learn_causes_body' },
+  { key: 'prevention', titleKey: 'infohub_learn_prevention_title', bodyKey: 'infohub_learn_prevention_body' },
+  { key: 'signs', titleKey: 'infohub_learn_signs_title', bodyKey: 'infohub_learn_signs_body' },
+  { key: 'treatment', titleKey: 'infohub_learn_treatment_title', bodyKey: 'infohub_learn_treatment_body' },
+];
+
 export default function InfoHub() {
   const { language, t } = useLanguage();
   const sw = language === 'sw';
   const [faqs, setFaqs] = useState([]);
   const [myths, setMyths] = useState([]);
   const [openId, setOpenId] = useState(null);
+  const [openTopic, setOpenTopic] = useState(LEARN_TOPICS[0].key);
   const [revealed, setRevealed] = useState({});
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -54,6 +63,25 @@ export default function InfoHub() {
       {error && <div className="error-box" style={{ maxWidth: 640, margin: '0 auto 20px' }}>{error}</div>}
 
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
+        <div className="section-head" style={{ marginBottom: 18 }}>
+          <h2 style={{ fontSize: 21 }}>{t('infohub_learn_title')}</h2>
+          <p>{t('infohub_learn_sub')}</p>
+        </div>
+        {LEARN_TOPICS.map(topic => (
+          <div className="faq-item" key={topic.key}>
+            <div className="faq-q" onClick={() => setOpenTopic(openTopic === topic.key ? null : topic.key)}>
+              {t(topic.titleKey)}<span>{openTopic === topic.key ? '▲' : '▼'}</span>
+            </div>
+            {openTopic === topic.key && <div className="faq-a">{t(topic.bodyKey)}</div>}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 640, margin: '40px auto 0' }}>
+        <div className="section-head" style={{ marginBottom: 18 }}>
+          <h2 style={{ fontSize: 21 }}>{t('infohub_faq_title')}</h2>
+          <p>{t('infohub_faq_sub')}</p>
+        </div>
         {faqs.length === 0 && !error && <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('infohub_empty')}</p>}
         {faqs.map(f => {
           const { question, answer } = faqText(f);
