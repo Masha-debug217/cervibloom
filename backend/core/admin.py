@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
-    VolunteerApplication, DonationRecord, FAQItem, MythFact
+    VolunteerApplication, DonationRecord, FAQItem, MythFact,
+    Article, ArticleBookmark, BlogPost
 )
 
 @admin.register(Facility)
@@ -26,6 +27,17 @@ class VolunteerApplicationAdmin(admin.ModelAdmin):
     list_display = ['volunteer', 'status', 'submitted_at']
     list_filter = ['status']
 
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ['title', 'source_name', 'order']
+    ordering = ['order']
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ['title', 'author', 'status', 'created_at']
+    list_filter = ['status']
+
 admin.site.register(SymptomLog)
 admin.site.register(ScreeningReminder)
 admin.site.register(DonationRecord)
+admin.site.register(ArticleBookmark)

@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from core import symptom_navigator
-from core.models import SymptomLog
+from core.models import SymptomLog, Article, BlogPost
 
 User = get_user_model()
 
@@ -108,3 +108,126 @@ class VolunteerApplicationRoleTests(APITestCase):
                                  {'status': 'CONTACTED'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['status'], 'CONTACTED')
+
+
+class ArticleTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('reader', 'r@e.com', 'testpass123')
+        self.other = User.objects.create_user('other', 'o@e.com', 'testpass123')
+        self.admin = User.objects.create_user('adm', 'adm@e.com', 'testpass123', role='ADMIN')
+        self.article = Article.objects.create(
+            title='Test Article', summary='A summary', body='A body',
+        )
+
+    def test_anonymous_user_can_read_articles(self):
+        resp = self.client.get('/api/articles/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertFalse(resp.data[0]['is_bookmarked'])
+
+    def test_non_admin_cannot_create_an_article(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.post('/api/articles/', {'title': 'x', 'summary': 'x', 'body': 'x'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_can_create_an_article(self):
+        self.client.force_authenticate(self.admin)
+        resp = self.client.post('/api/articles/', {'title': 'x', 'summary': 'x', 'body': 'x'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+    def test_anonymous_user_cannot_bookmark(self):
+        resp = self.client.post(f'/api/articles/{self.article.id}/toggle_bookmark/')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_toggle_bookmark_saves_then_removes(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.post(f'/api/articles/{self.article.id}/toggle_bookmark/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['is_bookmarked'])
+
+        resp = self.client.get('/api/articles/bookmarked/')
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['id'], self.article.id)
+
+        resp = self.client.post(f'/api/articles/{self.article.id}/toggle_bookmark/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertFalse(resp.data['is_bookmarked'])
+
+        resp = self.client.get('/api/articles/bookmarked/')
+        self.assertEqual(len(resp.data), 0)
+
+    def test_bookmarks_are_private_to_each_user(self):
+        self.client.force_authenticate(self.user)
+        self.client.post(f'/api/articles/{self.article.id}/toggle_bookmark/')
+
+        self.client.force_authenticate(self.other)
+        resp = self.client.get('/api/articles/bookmarked/')
+        self.assertEqual(len(resp.data), 0)
+
+
+class BlogPostTests(APITestCase):
+    def setUp(self):
+        self.author = User.objects.create_user('survivor', 's@e.com', 'testpass123')
+        self.other = User.objects.create_user('reader', 'r@e.com', 'testpass123')
+        self.admin = User.objects.create_user('adm', 'adm@e.com', 'testpass123', role='ADMIN')
+        self.published = BlogPost.objects.create(
+            author=self.author, title='Published', body='...', status=BlogPost.Status.PUBLISHED,
+        )
+        self.pending = BlogPost.objects.create(
+            author=self.author, title='Pending', body='...', status=BlogPost.Status.PENDING,
+        )
+
+    def test_anonymous_user_sees_only_published_posts(self):
+        resp = self.client.get('/api/blog-posts/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [p['title'] for p in resp.data]
+        self.assertEqual(titles, ['Published'])
+
+    def test_author_sees_their_own_pending_post_too(self):
+        self.client.force_authenticate(self.author)
+        resp = self.client.get('/api/blog-posts/')
+        titles = {p['title'] for p in resp.data}
+        self.assertEqual(titles, {'Published', 'Pending'})
+
+    def test_other_user_does_not_see_someone_elses_pending_post(self):
+        self.client.force_authenticate(self.other)
+        resp = self.client.get('/api/blog-posts/')
+        titles = {p['title'] for p in resp.data}
+        self.assertEqual(titles, {'Published'})
+
+    def test_new_post_defaults_to_pending_regardless_of_client_input(self):
+        self.client.force_authenticate(self.other)
+        resp = self.client.post(
+            '/api/blog-posts/', {'title': 'My story', 'body': '...', 'status': 'PUBLISHED'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['status'], 'PENDING')
+        self.assertEqual(resp.data['author_username'], 'reader')
+
+    def test_only_admin_can_change_post_status(self):
+        self.client.force_authenticate(self.author)
+        resp = self.client.patch(
+            f'/api/blog-posts/{self.pending.id}/status/', {'status': 'PUBLISHED'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(self.admin)
+        resp = self.client.patch(
+            f'/api/blog-posts/{self.pending.id}/status/', {'status': 'PUBLISHED'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['status'], 'PUBLISHED')
+
+    def test_user_cannot_edit_someone_elses_post(self):
+        self.client.force_authenticate(self.other)
+        resp = self.client.patch(
+            f'/api/blog-posts/{self.published.id}/', {'title': 'Hijacked'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_author_can_edit_their_own_post(self):
+        self.client.force_authenticate(self.author)
+        resp = self.client.patch(
+            f'/api/blog-posts/{self.pending.id}/', {'title': 'Updated title'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Updated title')

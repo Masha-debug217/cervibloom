@@ -29,13 +29,26 @@ prevention, signs, treatment) above the existing FAQ and Myth vs. Fact
 sections, all bilingual.
 
 ### Articles
-Science Articles on CC. Bookmarks.
+Done: added a bilingual Articles page under the Info Hub, seeded with four
+science articles on HPV and cervical cancer. Signed-in users can bookmark
+articles and view them in a separate Saved tab; admins manage articles the
+same way as FAQs and myths.
 
 ### Survivers Blog
-Survivers motivational blogs
+Done: added a Survivor Blog page. Any signed-in user can submit a story,
+which starts out pending and only appears publicly once an admin
+publishes it from the new Blog tab in the Admin console; a submitter can
+track their own story's status under "Share your story".
 
 ### Symptom navigator
-Interactive questioning symptom analyzer that navigates through some common sysmptoms and give a general diagnosis and advising to go to screening using AI.
+Done: already built on the Dashboard as a deterministic, rule-based
+questionnaire (see `backend/core/symptom_navigator.py`), not AI. It walks
+through the WHO-listed warning signs, computes a risk tier (routine /
+discuss / seek care) server-side, and for "seek care" points to the
+nearest facility in the Screening Directory. Kept rule-based rather than
+LLM-based on purpose: a real diagnosis-adjacent feature giving actual
+users health guidance needs to be transparent and reproducible, not a
+model that can hallucinate.
 
 ### Donations
 Ranked top 10, using payhero, public/anonymous, donations going to cancer organization like National Cancer Institute Kenya, CureCervicalCancer, 5% maintainance fee. 

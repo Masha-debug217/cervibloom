@@ -1,15 +1,17 @@
+from django.db.models import Q
 from rest_framework import viewsets, permissions, status as http_status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
-    VolunteerApplication, DonationRecord, FAQItem, MythFact
+    VolunteerApplication, DonationRecord, FAQItem, MythFact,
+    Article, ArticleBookmark, BlogPost,
 )
 from .serializers import (
     FacilitySerializer, SymptomLogSerializer, ScreeningReminderSerializer,
     VolunteerApplicationSerializer, DonationRecordSerializer, FAQItemSerializer,
-    MythFactSerializer
+    MythFactSerializer, ArticleSerializer, BlogPostSerializer
 )
 from .permissions import IsAdminRole, IsAdminRoleOrReadOnly
 from . import symptom_navigator
@@ -101,6 +103,96 @@ class MythFactViewSet(viewsets.ModelViewSet):
     queryset = MythFact.objects.all()
     serializer_class = MythFactSerializer
     permission_classes = [IsAdminRoleOrReadOnly]
+
+
+class ArticleViewSet(viewsets.ModelViewSet):
+    """Science articles for the Info Hub. Public read, ADMIN-only write - same as FAQs/myths."""
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    permission_classes = [IsAdminRoleOrReadOnly]
+
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), 'request': self.request}
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def toggle_bookmark(self, request, pk=None):
+        """
+        POST /api/articles/{id}/toggle_bookmark/
+        Saves the article to the signed-in user's bookmarks if it isn't
+        already there, otherwise removes it. Returns the new state so the
+        frontend doesn't need a second request to know what happened.
+        """
+        article = self.get_object()
+        bookmark = ArticleBookmark.objects.filter(user=request.user, article=article).first()
+        if bookmark:
+            bookmark.delete()
+            return Response({'is_bookmarked': False})
+        ArticleBookmark.objects.create(user=request.user, article=article)
+        return Response({'is_bookmarked': True})
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def bookmarked(self, request):
+        """GET /api/articles/bookmarked/ - the signed-in user's saved articles."""
+        articles = self.get_queryset().filter(bookmarked_by__user=request.user)
+        serializer = self.get_serializer(articles, many=True)
+        return Response(serializer.data)
+
+
+class BlogPostViewSet(viewsets.ModelViewSet):
+    """
+    Survivor Blog. Anyone can read PUBLISHED posts; a signed-in author can
+    also see their own PENDING/REJECTED ones so they can track what they
+    submitted, and Admin sees everything. Any signed-in user can submit a
+    post, but only Admin can move it out of PENDING (see `status` action).
+    """
+    serializer_class = BlogPostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.role == 'ADMIN':
+            return BlogPost.objects.all()
+        if user.is_authenticated:
+            return BlogPost.objects.filter(Q(status=BlogPost.Status.PUBLISHED) | Q(author=user))
+        return BlogPost.objects.filter(status=BlogPost.Status.PUBLISHED)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        # An author can edit their own post's title/body; an admin can edit
+        # any post. Nobody else reaches this - get_queryset already hides
+        # posts a non-owner, non-admin request has no business touching.
+        post = serializer.instance
+        if self.request.user != post.author and self.request.user.role != 'ADMIN':
+            raise PermissionDenied("You can only edit your own posts.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user != instance.author and self.request.user.role != 'ADMIN':
+            raise PermissionDenied("You can only delete your own posts.")
+        instance.delete()
+
+    @action(detail=True, methods=['patch'], url_path='status', permission_classes=[permissions.IsAuthenticated])
+    def set_status(self, request, pk=None):
+        """
+        PATCH /api/blog-posts/{id}/status/  {"status": "PUBLISHED"}
+        ADMIN-only, same shape as the volunteer application status action.
+        """
+        if not (request.user.is_authenticated and request.user.role == 'ADMIN'):
+            raise PermissionDenied("Only an admin can change a post's status.")
+
+        post = self.get_object()
+        new_status = request.data.get('status')
+        valid = [choice[0] for choice in BlogPost.Status.choices]
+        if new_status not in valid:
+            return Response(
+                {'status': [f"Must be one of: {', '.join(valid)}."]},
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
+        post.status = new_status
+        post.save(update_fields=['status'])
+        return Response(self.get_serializer(post).data)
 
 
 class SymptomLogViewSet(viewsets.ModelViewSet):

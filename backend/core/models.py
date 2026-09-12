@@ -133,6 +133,79 @@ class FAQItem(models.Model):
         return self.question
 
 
+class Article(models.Model):
+    """
+    A longer-form science article for the Info Hub (HPV/cervical cancer
+    research, prevention, and treatment), admin-editable like FAQItem and
+    MythFact rather than hardcoded in the frontend.
+    """
+    title = models.CharField(max_length=255)
+    summary = models.CharField(max_length=400, help_text="Short teaser shown in the article list.")
+    body = models.TextField(help_text="Full article text.")
+    source_name = models.CharField(
+        max_length=150, blank=True,
+        help_text="Where this is drawn from, e.g. 'WHO Africa' or 'IARC/HPV Information Centre'."
+    )
+    source_url = models.URLField(blank=True, help_text="Link to the original source, if any.")
+    title_sw = models.CharField(
+        max_length=255, blank=True, help_text="Kiswahili translation. Optional; falls back to the English title."
+    )
+    summary_sw = models.CharField(
+        max_length=400, blank=True, help_text="Kiswahili translation. Optional; falls back to the English summary."
+    )
+    body_sw = models.TextField(
+        blank=True, help_text="Kiswahili translation. Optional; falls back to the English body."
+    )
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class ArticleBookmark(models.Model):
+    """A user's saved article, for the Info Hub's Bookmarks feature."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='article_bookmarks')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='bookmarked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'article')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.article.title}"
+
+
+class BlogPost(models.Model):
+    """
+    A survivor's story for the Survivor Blog. Unlike FAQItem/Article, this is
+    user-submitted rather than admin-authored, so it goes through a review
+    queue before it's shown publicly: an Admin moves it from PENDING to
+    PUBLISHED (or REJECTED) via the dedicated `status` action, the same
+    pattern already used for VolunteerApplication.
+    """
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending review"
+        PUBLISHED = "PUBLISHED", "Published"
+        REJECTED = "REJECTED", "Rejected"
+
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blog_posts')
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} by {self.author.username} ({self.status})"
+
+
 class MythFact(models.Model):
     """
     A myth-vs-fact card for the Info Hub. Admin-managed exactly like FAQItem

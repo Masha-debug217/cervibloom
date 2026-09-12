@@ -196,6 +196,59 @@ function VolunteersTab() {
   );
 }
 
+/* ---------------------------- Survivor Blog posts ---------------------------- */
+
+const BLOG_STATUSES = ['PENDING', 'PUBLISHED', 'REJECTED'];
+
+function BlogTab() {
+  const [rows, setRows] = useState([]);
+  const [error, setError] = useState('');
+
+  const load = useCallback(() => {
+    client.get('/blog-posts/').then((r) => setRows(r.data)).catch(() => setError('Could not load blog posts.'));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function changeStatus(id, status) {
+    setError('');
+    try {
+      await client.patch(`/blog-posts/${id}/status/`, { status });
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Could not update status.');
+    }
+  }
+
+  return (
+    <div className="panel">
+      <h3>Survivor Blog posts</h3>
+      {error && <div className="error-box">{error}</div>}
+      {rows.length === 0 && <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>No posts yet.</p>}
+      {rows.length > 0 && (
+        <Table columns={['Author', 'Title', 'Story', 'Submitted', 'Status']}>
+          {rows.map((p) => (
+            <tr key={p.id}>
+              <td style={cellStyle}>{p.author_username}</td>
+              <td style={{ ...cellStyle, maxWidth: 180 }}>{p.title}</td>
+              <td style={{ ...cellStyle, maxWidth: 320, color: 'var(--text-secondary)' }}>{p.body}</td>
+              <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{new Date(p.created_at).toLocaleDateString()}</td>
+              <td style={cellStyle}>
+                <select
+                  style={{ ...inputStyle, width: 'auto' }}
+                  value={p.status}
+                  onChange={(e) => changeStatus(p.id, e.target.value)}
+                >
+                  {BLOG_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------- FAQ items ------------------------------- */
 
 const BLANK_FAQ = { question: '', answer: '', question_sw: '', answer_sw: '', order: 0 };
@@ -361,6 +414,94 @@ function MythsTab() {
   );
 }
 
+/* -------------------------------- Articles -------------------------------- */
+
+const BLANK_ARTICLE = {
+  title: '', summary: '', body: '', title_sw: '', summary_sw: '', body_sw: '',
+  source_name: '', source_url: '', order: 0,
+};
+
+function ArticlesTab() {
+  const [rows, setRows] = useState([]);
+  const [form, setForm] = useState(BLANK_ARTICLE);
+  const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    client.get('/articles/').then((r) => setRows(r.data)).catch(() => setError('Could not load articles.'));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  function startEdit(a) {
+    setEditingId(a.id);
+    setForm({
+      title: a.title, summary: a.summary, body: a.body,
+      title_sw: a.title_sw ?? '', summary_sw: a.summary_sw ?? '', body_sw: a.body_sw ?? '',
+      source_name: a.source_name ?? '', source_url: a.source_url ?? '', order: a.order,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function resetForm() { setEditingId(null); setForm(BLANK_ARTICLE); }
+
+  async function save(e) {
+    e.preventDefault();
+    setError(''); setBusy(true);
+    const payload = { ...form, order: Number(form.order) || 0 };
+    try {
+      if (editingId) await client.put(`/articles/${editingId}/`, payload);
+      else await client.post('/articles/', payload);
+      resetForm(); load();
+    } catch (err) {
+      setError(err.response?.data ? JSON.stringify(err.response.data) : 'Save failed.');
+    } finally { setBusy(false); }
+  }
+
+  async function remove(id) {
+    if (!window.confirm('Delete this article?')) return;
+    try { await client.delete(`/articles/${id}/`); load(); }
+    catch { setError('Delete failed.'); }
+  }
+
+  return (
+    <div className="panel">
+      <h3>{editingId ? 'Edit article' : 'Add article'}</h3>
+      {error && <div className="error-box">{error}</div>}
+      <form onSubmit={save} style={{ marginBottom: 18 }}>
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Summary (short teaser)" required value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+        <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={5} placeholder="Body" required value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Title in Kiswahili (optional)" value={form.title_sw} onChange={(e) => setForm({ ...form, title_sw: e.target.value })} />
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Summary in Kiswahili (optional)" value={form.summary_sw} onChange={(e) => setForm({ ...form, summary_sw: e.target.value })} />
+        <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={5} placeholder="Body in Kiswahili (optional)" value={form.body_sw} onChange={(e) => setForm({ ...form, body_sw: e.target.value })} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input style={inputStyle} placeholder="Source name (optional)" value={form.source_name} onChange={(e) => setForm({ ...form, source_name: e.target.value })} />
+          <input style={inputStyle} placeholder="Source URL (optional)" value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} />
+          <input style={{ ...inputStyle, width: 100 }} type="number" placeholder="Order" value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })} />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" disabled={busy}>{editingId ? 'Save changes' : 'Add article'}</button>
+          {editingId && <button type="button" className="btn btn-outline" onClick={resetForm}>Cancel</button>}
+        </div>
+      </form>
+
+      <Table columns={['#', 'Title', 'Summary', '']}>
+        {rows.map((a) => (
+          <tr key={a.id}>
+            <td style={cellStyle}>{a.order}</td>
+            <td style={{ ...cellStyle, maxWidth: 220 }}>{a.title}</td>
+            <td style={{ ...cellStyle, maxWidth: 320, color: 'var(--text-secondary)' }}>{a.summary}</td>
+            <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => startEdit(a)}>Edit</button>{' '}
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => remove(a.id)}>Delete</button>
+            </td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
 /* --------------------------------- Page --------------------------------- */
 
 export default function Admin() {
@@ -372,17 +513,21 @@ export default function Admin() {
         <h2>Admin console</h2>
         <p>Manage screening facilities, volunteer applications, and Info Hub content.</p>
       </div>
-      <div className="tabs" style={{ maxWidth: 640 }}>
+      <div className="tabs" style={{ maxWidth: 820 }}>
         <button className={tab === 'facilities' ? 'active' : ''} onClick={() => setTab('facilities')}>Facilities</button>
         <button className={tab === 'volunteers' ? 'active' : ''} onClick={() => setTab('volunteers')}>Volunteers</button>
         <button className={tab === 'faqs' ? 'active' : ''} onClick={() => setTab('faqs')}>FAQ</button>
         <button className={tab === 'myths' ? 'active' : ''} onClick={() => setTab('myths')}>Myths</button>
+        <button className={tab === 'articles' ? 'active' : ''} onClick={() => setTab('articles')}>Articles</button>
+        <button className={tab === 'blog' ? 'active' : ''} onClick={() => setTab('blog')}>Blog</button>
       </div>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {tab === 'facilities' && <FacilitiesTab />}
         {tab === 'volunteers' && <VolunteersTab />}
         {tab === 'faqs' && <FaqTab />}
         {tab === 'myths' && <MythsTab />}
+        {tab === 'articles' && <ArticlesTab />}
+        {tab === 'blog' && <BlogTab />}
       </div>
     </div>
   );

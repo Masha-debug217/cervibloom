@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Home from './pages/Home';
 import InfoHub from './pages/InfoHub';
+import Articles from './pages/Articles';
+import SurvivorBlog from './pages/SurvivorBlog';
 import Directory from './pages/Directory';
 import Dashboard from './pages/Dashboard';
 import VolunteerDonate from './pages/VolunteerDonate';
@@ -56,6 +58,8 @@ function Nav() {
       <div className="nav-links">
         <NavLink to="/">{t('nav_home')}</NavLink>
         <NavLink to="/info-hub">{t('nav_infohub')}</NavLink>
+        <NavLink to="/articles">{t('nav_articles')}</NavLink>
+        <NavLink to="/blog">{t('nav_blog')}</NavLink>
         <NavLink to="/directory">{t('nav_directory')}</NavLink>
         {role === 'USER' && <NavLink to="/dashboard">{t('nav_dashboard')}</NavLink>}
         {role === 'USER' && <NavLink to="/volunteer">{t('nav_volunteer')}</NavLink>}
@@ -106,6 +110,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/info-hub" element={<InfoHub />} />
+            <Route path="/articles" element={<Articles />} />
+            <Route path="/blog" element={<SurvivorBlog />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/volunteer" element={<ProtectedRoute><VolunteerDonate /></ProtectedRoute>} />
