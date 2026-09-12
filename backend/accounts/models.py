@@ -8,9 +8,11 @@ class User(AbstractUser):
 
     WHY a custom user model instead of Django's default:
     Django's built-in User has no concept of "type of account."
-    We need Patient / Volunteer / Admin to behave differently
-    (different data they can see, different dashboard, different
-    permissions) so we extend AbstractUser and add `role`.
+    Everyone who signs up gets the same access (their own symptom logs,
+    screening reminders, volunteer applications, and donations), but an
+    Admin account also manages the Info Hub content, screening directory,
+    and volunteer applications for everyone else. We extend AbstractUser
+    and add `role` to tell the two apart.
 
     IMPORTANT: this must be set as AUTH_USER_MODEL in settings.py
     BEFORE the first migration is run, since swapping user models
@@ -18,14 +20,13 @@ class User(AbstractUser):
     """
 
     class Role(models.TextChoices):
-        PATIENT = "PATIENT", "Patient"
-        VOLUNTEER = "VOLUNTEER", "Volunteer"
+        USER = "USER", "User"
         ADMIN = "ADMIN", "Admin"
 
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
-        default=Role.PATIENT,
+        default=Role.USER,
     )
     phone_number = models.CharField(max_length=20, blank=True)
     county = models.CharField(max_length=100, blank=True)

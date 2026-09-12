@@ -97,7 +97,7 @@ class MythFactViewSet(viewsets.ModelViewSet):
 
 class SymptomLogViewSet(viewsets.ModelViewSet):
     """
-    A patient can only ever see/create/edit THEIR OWN symptom logs.
+    A user can only ever see/create/edit THEIR OWN symptom logs.
     This is the key privacy rule from our proposal - enforced here,
     not just in the UI (the UI hiding a button is not security).
     """
@@ -132,7 +132,7 @@ class SymptomLogViewSet(viewsets.ModelViewSet):
 
 class ScreeningReminderViewSet(viewsets.ModelViewSet):
     """
-    Read: a patient sees only their own reminder; an admin sees all.
+    Read: a user sees only their own reminder; an admin sees all.
     Write (create/update/delete): ADMIN only - `IsAdminRole` already allows
     any authenticated read and restricts unsafe methods to role=ADMIN.
 
@@ -160,7 +160,7 @@ class ScreeningReminderViewSet(viewsets.ModelViewSet):
 
 
 class VolunteerApplicationViewSet(viewsets.ModelViewSet):
-    """A volunteer can create + view their own applications. Admin sees all (future: separate admin endpoint)."""
+    """A user can create + view their own applications. Admin sees all (future: separate admin endpoint)."""
     serializer_class = VolunteerApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -171,11 +171,11 @@ class VolunteerApplicationViewSet(viewsets.ModelViewSet):
         return VolunteerApplication.objects.filter(volunteer=user)
 
     def perform_create(self, serializer):
-        # Enforced server-side: a Patient or Admin account cannot file a
-        # volunteer application, no matter what the client sends.
-        if self.request.user.role != 'VOLUNTEER':
+        # Enforced server-side: an Admin account cannot file a volunteer
+        # application, no matter what the client sends.
+        if self.request.user.role == 'ADMIN':
             raise PermissionDenied(
-                "Only volunteer accounts can submit a volunteer application."
+                "Admin accounts cannot submit a volunteer application."
             )
         serializer.save(volunteer=self.request.user)
 

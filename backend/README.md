@@ -1,9 +1,12 @@
 # CerviBloom Backend (Django + DRF)
 
 ## What this is
-Role-based REST API for CerviBloom: Patient / Volunteer / Admin accounts,
-JWT authentication, screening facility directory, symptom logs, screening
-reminders, volunteer applications, and simulated donations.
+Role-based REST API for CerviBloom: User / Admin accounts, JWT
+authentication, screening facility directory, symptom logs, screening
+reminders, volunteer applications, and simulated donations. Every signed-up
+account is a User and can track symptoms, apply to volunteer, and donate;
+Admin is a separate account type that manages the Info Hub content,
+screening directory, and volunteer applications.
 
 ## Requirements
 - **Python 3.12 or newer.** This is a hard requirement: `requirements.txt`
@@ -49,7 +52,7 @@ python -c "import secrets; print(secrets.token_urlsafe(50))"
 ## Key endpoints
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/api/auth/register/` | POST | Create a Patient or Volunteer account (role=ADMIN is rejected) |
+| `/api/auth/register/` | POST | Create a User account (there is no role field to set; role=ADMIN cannot be requested) |
 | `/api/auth/login/` | POST | Get JWT access+refresh tokens |
 | `/api/auth/login/refresh/` | POST | Exchange a refresh token for a new access token |
 | `/api/auth/me/` | GET | Current logged-in user's profile |
@@ -57,21 +60,21 @@ python -c "import secrets; print(secrets.token_urlsafe(50))"
 | `/api/faqs/` | GET (public) / POST | Info Hub content (write = Admin only) |
 | `/api/faqs/search/?q=` | GET (public) | Rule-based keyword search over FAQ content, no LLM |
 | `/api/myths/` | GET (public) / POST | Myth-vs-fact cards (write = Admin only) |
-| `/api/symptom-logs/` | GET/POST | Patient's own Symptom Navigator entries; risk tier computed server-side |
+| `/api/symptom-logs/` | GET/POST | The signed-in user's own Symptom Navigator entries; risk tier computed server-side |
 | `/api/symptom-logs/questions/` | GET | The fixed Navigator question set + tier copy |
-| `/api/screening-reminders/` | GET / POST / PUT | Patient reads own; Admin reads all and writes |
-| `/api/volunteer-applications/` | GET/POST | VOLUNTEER creates own; Admin sees all |
+| `/api/screening-reminders/` | GET / POST / PUT | User reads own; Admin reads all and writes |
+| `/api/volunteer-applications/` | GET/POST | Any User creates own (Admin accounts cannot); Admin sees all |
 | `/api/volunteer-applications/{id}/status/` | PATCH | Admin-only: set PENDING/CONTACTED/ACCEPTED |
 | `/api/donations/` | GET/POST | Simulated donations (amount + anonymous flag); donor sees own history |
 | `/admin/` | - | Django admin panel (use createsuperuser above) |
 
 ## Why key decisions were made
 - **Custom User model** (`accounts/models.py`): needed a `role` field from day
-  one since Patient/Volunteer/Admin see fundamentally different data.
+  one since a User and an Admin see fundamentally different data.
 - **JWT not sessions**: frontend (React) and backend (Django) are separate
   apps talking over HTTP, so token-based auth is the standard pattern.
 - **Permissions enforced in `get_queryset()`**, not just hidden UI buttons -
-  e.g. a Patient's symptom logs are filtered server-side to their own user,
+  e.g. a user's symptom logs are filtered server-side to their own account,
   so even a modified frontend can't see someone else's health data.
 - **SQLite for local dev only** - swap to Postgres before deploying (most
   free hosts wipe SQLite's file on every restart).

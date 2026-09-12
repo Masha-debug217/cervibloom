@@ -25,8 +25,8 @@ class SymptomNavigatorScoringTests(APITestCase):
         self.assertEqual(symptom_navigator.score(answers), 'SEEK_CARE')
 
     def test_risk_tier_is_set_from_answers_not_from_client(self):
-        patient = User.objects.create_user('nav', 'n@e.com', 'testpass123', role='PATIENT')
-        self.client.force_authenticate(patient)
+        user = User.objects.create_user('nav', 'n@e.com', 'testpass123')
+        self.client.force_authenticate(user)
         resp = self.client.post(
             '/api/symptom-logs/',
             {'answers': {'postmenopausal_bleeding': True}, 'risk_tier': 'ROUTINE'},
@@ -37,20 +37,20 @@ class SymptomNavigatorScoringTests(APITestCase):
 
 
 class SymptomLogPrivacyTests(APITestCase):
-    """A patient's health data is filtered server-side to that patient."""
+    """A user's health data is filtered server-side to that user."""
 
     def setUp(self):
-        self.alice = User.objects.create_user('alice', 'a@e.com', 'testpass123', role='PATIENT')
-        self.bob = User.objects.create_user('bob', 'b@e.com', 'testpass123', role='PATIENT')
+        self.alice = User.objects.create_user('alice', 'a@e.com', 'testpass123')
+        self.bob = User.objects.create_user('bob', 'b@e.com', 'testpass123')
         SymptomLog.objects.create(patient=self.alice, symptoms='Pelvic pain')
 
-    def test_patient_cannot_see_another_patients_symptom_logs(self):
+    def test_user_cannot_see_another_users_symptom_logs(self):
         self.client.force_authenticate(self.bob)
         resp = self.client.get('/api/symptom-logs/')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(list(resp.data), [])
 
-    def test_patient_sees_only_their_own_symptom_logs(self):
+    def test_user_sees_only_their_own_symptom_logs(self):
         self.client.force_authenticate(self.alice)
         resp = self.client.get('/api/symptom-logs/')
         self.assertEqual(len(resp.data), 1)
@@ -59,7 +59,7 @@ class SymptomLogPrivacyTests(APITestCase):
 
 class FacilityPermissionTests(APITestCase):
     def setUp(self):
-        self.patient = User.objects.create_user('pat', 'p@e.com', 'testpass123', role='PATIENT')
+        self.user = User.objects.create_user('pat', 'p@e.com', 'testpass123')
         self.admin = User.objects.create_user('adm', 'adm@e.com', 'testpass123', role='ADMIN')
         self.payload = {'name': 'Test Hospital', 'county': 'Nairobi', 'services': 'VIA'}
 
@@ -68,7 +68,7 @@ class FacilityPermissionTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_non_admin_cannot_create_a_facility(self):
-        self.client.force_authenticate(self.patient)
+        self.client.force_authenticate(self.user)
         resp = self.client.post('/api/facilities/', self.payload, format='json')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -80,31 +80,30 @@ class FacilityPermissionTests(APITestCase):
 
 class VolunteerApplicationRoleTests(APITestCase):
     def setUp(self):
-        self.patient = User.objects.create_user('pat', 'p@e.com', 'testpass123', role='PATIENT')
-        self.volunteer = User.objects.create_user('vol', 'v@e.com', 'testpass123', role='VOLUNTEER')
+        self.user = User.objects.create_user('u1', 'u1@e.com', 'testpass123')
+        self.admin = User.objects.create_user('adm', 'adm@e.com', 'testpass123', role='ADMIN')
 
-    def test_patient_cannot_create_a_volunteer_application(self):
-        self.client.force_authenticate(self.patient)
+    def test_admin_cannot_create_a_volunteer_application(self):
+        self.client.force_authenticate(self.admin)
         resp = self.client.post('/api/volunteer-applications/', {'message': 'hi'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_volunteer_can_create_a_volunteer_application(self):
-        self.client.force_authenticate(self.volunteer)
+    def test_user_can_create_a_volunteer_application(self):
+        self.client.force_authenticate(self.user)
         resp = self.client.post('/api/volunteer-applications/', {'message': 'hi'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_only_admin_can_change_application_status(self):
-        self.client.force_authenticate(self.volunteer)
+        self.client.force_authenticate(self.user)
         created = self.client.post('/api/volunteer-applications/', {'message': 'hi'}, format='json')
         app_id = created.data['id']
 
-        # volunteer cannot move their own status
+        # a regular user cannot move their own application's status
         resp = self.client.patch(f'/api/volunteer-applications/{app_id}/status/',
                                  {'status': 'ACCEPTED'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-        admin = User.objects.create_user('adm', 'adm@e.com', 'testpass123', role='ADMIN')
-        self.client.force_authenticate(admin)
+        self.client.force_authenticate(self.admin)
         resp = self.client.patch(f'/api/volunteer-applications/{app_id}/status/',
                                  {'status': 'CONTACTED'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
