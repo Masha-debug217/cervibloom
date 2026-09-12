@@ -75,7 +75,7 @@ export default function Auth() {
     <div className="page container">
       <div className="form-card">
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <div className="brand-icon" style={{ margin: '0 auto 10px' }}>💗</div>
+          <div className="brand-icon" style={{ margin: '0 auto 10px' }}><img src="/cervibloomLogo.png" alt="CerviBloom" /></div>
           <h2 style={{ marginBottom: 4 }}>{t('auth_join_title')}</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13.5, margin: 0 }}>
             {t('auth_join_sub')}

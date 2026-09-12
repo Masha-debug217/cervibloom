@@ -52,7 +52,7 @@ function Nav() {
   return (
     <nav>
       <NavLink to="/" className="brand">
-        <div className="brand-icon">💗</div>
+        <div className="brand-icon"><img src="/cervibloomLogo.png" alt="CerviBloom" /></div>
         <span className="brand-name">CerviBloom</span>
       </NavLink>
       <div className="nav-links">
