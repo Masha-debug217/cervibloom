@@ -22,6 +22,10 @@ class Facility(models.Model):
         max_length=255,
         help_text="Comma-separated, e.g. 'VIA, Pap smear, Treatment'"
     )
+    services_sw = models.CharField(
+        max_length=255, blank=True,
+        help_text="Kiswahili translation of `services`. Optional; the English list is shown if this is blank."
+    )
     source_note = models.CharField(
         max_length=255, blank=True,
         help_text="Where this data was verified from (WHO/MOH report, etc.)"
@@ -114,6 +118,12 @@ class FAQItem(models.Model):
     """Info Hub content - admin-editable so it isn't hardcoded."""
     question = models.CharField(max_length=255)
     answer = models.TextField()
+    question_sw = models.CharField(
+        max_length=255, blank=True, help_text="Kiswahili translation. Optional; falls back to the English question."
+    )
+    answer_sw = models.TextField(
+        blank=True, help_text="Kiswahili translation. Optional; falls back to the English answer."
+    )
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -137,6 +147,12 @@ class MythFact(models.Model):
 
     myth = models.CharField(max_length=255, help_text="The false belief, stated plainly.")
     fact = models.TextField(help_text="The correction, medically grounded.")
+    myth_sw = models.CharField(
+        max_length=255, blank=True, help_text="Kiswahili translation. Optional; falls back to the English myth."
+    )
+    fact_sw = models.TextField(
+        blank=True, help_text="Kiswahili translation. Optional; falls back to the English fact."
+    )
     category = models.CharField(
         max_length=20, choices=Category.choices, default=Category.GENERAL
     )

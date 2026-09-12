@@ -38,7 +38,7 @@ function Table({ columns, children }) {
 const STOCK_OPTIONS = ['UNKNOWN', 'IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'];
 
 const BLANK_FACILITY = {
-  name: '', county: '', address: '', services: '',
+  name: '', county: '', address: '', services: '', services_sw: '',
   latitude: '', longitude: '', source_note: '', is_wics_site: false,
   hpv_vaccine_stock: 'UNKNOWN', pap_smear_kit_stock: 'UNKNOWN',
 };
@@ -59,7 +59,8 @@ function FacilitiesTab() {
     setEditingId(f.id);
     setForm({
       name: f.name ?? '', county: f.county ?? '', address: f.address ?? '',
-      services: f.services ?? '', latitude: f.latitude ?? '', longitude: f.longitude ?? '',
+      services: f.services ?? '', services_sw: f.services_sw ?? '',
+      latitude: f.latitude ?? '', longitude: f.longitude ?? '',
       source_note: f.source_note ?? '', is_wics_site: !!f.is_wics_site,
       hpv_vaccine_stock: f.hpv_vaccine_stock ?? 'UNKNOWN',
       pap_smear_kit_stock: f.pap_smear_kit_stock ?? 'UNKNOWN',
@@ -100,6 +101,7 @@ function FacilitiesTab() {
         <input style={inputStyle} placeholder="County" required value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} />
         <input style={inputStyle} placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
         <input style={inputStyle} placeholder="Services (comma-separated)" required value={form.services} onChange={(e) => setForm({ ...form, services: e.target.value })} />
+        <input style={inputStyle} placeholder="Services in Kiswahili (optional)" value={form.services_sw} onChange={(e) => setForm({ ...form, services_sw: e.target.value })} />
         <input style={inputStyle} placeholder="Latitude" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
         <input style={inputStyle} placeholder="Longitude" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
         <input style={inputStyle} placeholder="Source note" value={form.source_note} onChange={(e) => setForm({ ...form, source_note: e.target.value })} />
@@ -196,7 +198,7 @@ function VolunteersTab() {
 
 /* ------------------------------- FAQ items ------------------------------- */
 
-const BLANK_FAQ = { question: '', answer: '', order: 0 };
+const BLANK_FAQ = { question: '', answer: '', question_sw: '', answer_sw: '', order: 0 };
 
 function FaqTab() {
   const [rows, setRows] = useState([]);
@@ -212,7 +214,11 @@ function FaqTab() {
 
   function startEdit(f) {
     setEditingId(f.id);
-    setForm({ question: f.question, answer: f.answer, order: f.order });
+    setForm({
+      question: f.question, answer: f.answer,
+      question_sw: f.question_sw ?? '', answer_sw: f.answer_sw ?? '',
+      order: f.order,
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   function resetForm() { setEditingId(null); setForm(BLANK_FAQ); }
@@ -243,6 +249,8 @@ function FaqTab() {
       <form onSubmit={save} style={{ marginBottom: 18 }}>
         <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Question" required value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} />
         <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={3} placeholder="Answer" required value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} />
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Question in Kiswahili (optional)" value={form.question_sw} onChange={(e) => setForm({ ...form, question_sw: e.target.value })} />
+        <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={3} placeholder="Answer in Kiswahili (optional)" value={form.answer_sw} onChange={(e) => setForm({ ...form, answer_sw: e.target.value })} />
         <input style={{ ...inputStyle, width: 120, marginBottom: 8 }} type="number" placeholder="Order" value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-primary" disabled={busy}>{editingId ? 'Save changes' : 'Add FAQ item'}</button>
@@ -270,7 +278,7 @@ function FaqTab() {
 /* ------------------------------ Myth vs Fact ----------------------------- */
 
 const MYTH_CATEGORIES = ['GENERAL', 'VACCINE', 'SCREENING', 'TRANSMISSION', 'TREATMENT'];
-const BLANK_MYTH = { myth: '', fact: '', category: 'GENERAL', order: 0 };
+const BLANK_MYTH = { myth: '', fact: '', myth_sw: '', fact_sw: '', category: 'GENERAL', order: 0 };
 
 function MythsTab() {
   const [rows, setRows] = useState([]);
@@ -286,7 +294,11 @@ function MythsTab() {
 
   function startEdit(m) {
     setEditingId(m.id);
-    setForm({ myth: m.myth, fact: m.fact, category: m.category, order: m.order });
+    setForm({
+      myth: m.myth, fact: m.fact,
+      myth_sw: m.myth_sw ?? '', fact_sw: m.fact_sw ?? '',
+      category: m.category, order: m.order,
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   function resetForm() { setEditingId(null); setForm(BLANK_MYTH); }
@@ -317,6 +329,8 @@ function MythsTab() {
       <form onSubmit={save} style={{ marginBottom: 18 }}>
         <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Myth (the false belief)" required value={form.myth} onChange={(e) => setForm({ ...form, myth: e.target.value })} />
         <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={3} placeholder="Fact (the correction)" required value={form.fact} onChange={(e) => setForm({ ...form, fact: e.target.value })} />
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Myth in Kiswahili (optional)" value={form.myth_sw} onChange={(e) => setForm({ ...form, myth_sw: e.target.value })} />
+        <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={3} placeholder="Fact in Kiswahili (optional)" value={form.fact_sw} onChange={(e) => setForm({ ...form, fact_sw: e.target.value })} />
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <select style={{ ...inputStyle, width: 'auto' }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
             {MYTH_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}

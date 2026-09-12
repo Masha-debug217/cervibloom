@@ -65,10 +65,10 @@ class DonationRecordSerializer(serializers.ModelSerializer):
 class FAQItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQItem
-        fields = ['id', 'question', 'answer', 'order']
+        fields = ['id', 'question', 'answer', 'question_sw', 'answer_sw', 'order']
 
 
 class MythFactSerializer(serializers.ModelSerializer):
     class Meta:
         model = MythFact
-        fields = ['id', 'myth', 'fact', 'category', 'order']
+        fields = ['id', 'myth', 'fact', 'myth_sw', 'fact_sw', 'category', 'order']

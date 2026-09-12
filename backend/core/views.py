@@ -53,20 +53,24 @@ class FAQItemViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def search(self, request):
         """
-        GET /api/faqs/search/?q=...
+        GET /api/faqs/search/?q=...&lang=en|sw
         Rule-based, offline keyword match over existing FAQ content - no
         external LLM call, works with zero API budget. Question-text matches
-        are weighted more heavily than answer-body matches. If nothing scores,
-        we hand back a suggestion to visit a screening centre instead.
+        are weighted more heavily than answer-body matches, and both the
+        English and Kiswahili fields are searched regardless of `lang` (a
+        user might type in either). If nothing scores, we hand back a
+        suggestion, in the requested language, to visit a screening centre
+        instead.
         """
         query_tokens = _tokenise(request.query_params.get('q', ''))
+        lang = request.query_params.get('lang', 'en')
         if not query_tokens:
             return Response({'results': [], 'suggestion': None})
 
         scored = []
         for faq in FAQItem.objects.all():
-            q_tokens = set(_tokenise(faq.question))
-            a_tokens = set(_tokenise(faq.answer))
+            q_tokens = set(_tokenise(faq.question)) | set(_tokenise(faq.question_sw))
+            a_tokens = set(_tokenise(faq.answer)) | set(_tokenise(faq.answer_sw))
             score = 2 * len(q_tokens & set(query_tokens)) + len(a_tokens & set(query_tokens))
             if score:
                 scored.append((score, faq))
@@ -75,13 +79,17 @@ class FAQItemViewSet(viewsets.ModelViewSet):
         top = [faq for _, faq in scored[:5]]
 
         if not top:
-            return Response({
-                'results': [],
-                'suggestion': "We could not match your question to our answers. "
-                              "Please visit a screening centre or talk to a health "
-                              "worker - you can find your nearest one in the "
-                              "Screening Directory.",
-            })
+            suggestion = (
+                "Hatukuweza kulinganisha swali lako na majibu yetu. Tafadhali "
+                "tembelea kituo cha uchunguzi au zungumza na mhudumu wa afya, "
+                "unaweza kupata kilicho karibu nawe katika Vituo vya Uchunguzi."
+                if lang == 'sw' else
+                "We could not match your question to our answers. "
+                "Please visit a screening centre or talk to a health "
+                "worker - you can find your nearest one in the "
+                "Screening Directory."
+            )
+            return Response({'results': [], 'suggestion': suggestion})
         return Response({
             'results': FAQItemSerializer(top, many=True).data,
             'suggestion': None,

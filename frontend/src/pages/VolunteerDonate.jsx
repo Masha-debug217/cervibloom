@@ -1,18 +1,29 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
+import { useLanguage } from '../context/LanguageContext';
 
 const PRESETS = [500, 1000, 2500, 5000];
 
-// Illustrative only - placeholder reasoning for this student project, not
-// audited real-world unit costs. The disclaimer under the form says so.
+// Illustrative only - approximate reasoning, not audited real-world unit
+// costs. The disclaimer under the form says so.
 const IMPACT = {
-  500: 'Roughly covers transport for one woman to reach a screening clinic and back.',
-  1000: 'About the cost of one VIA screening visit, consumables included.',
-  2500: 'Helps run a small community outreach session reaching a dozen or so women.',
-  5000: 'Supports an HPV vaccine awareness drive for a class of adolescent girls.',
+  en: {
+    500: 'Roughly covers transport for one woman to reach a screening clinic and back.',
+    1000: 'About the cost of one VIA screening visit, consumables included.',
+    2500: 'Helps run a small community outreach session reaching a dozen or so women.',
+    5000: 'Supports an HPV vaccine awareness drive for a class of adolescent girls.',
+  },
+  sw: {
+    500: 'Inagharamia takribani nauli ya mwanamke mmoja kufika kliniki ya uchunguzi na kurudi.',
+    1000: 'Karibu na gharama ya ziara moja ya uchunguzi wa VIA, ikiwemo vifaa.',
+    2500: 'Husaidia kuendesha kikao kidogo cha uhamasishaji jamii kinachofikia wanawake kumi na wachache.',
+    5000: 'Inasaidia kampeni ya uhamasishaji wa chanjo ya HPV kwa darasa la wasichana balehe.',
+  },
 };
 
 export default function VolunteerDonate() {
+  const { language, t } = useLanguage();
+  const impact = IMPACT[language] || IMPACT.en;
   const [tab, setTab] = useState('volunteer');
   const [message, setMessage] = useState('');
   const [amount, setAmount] = useState(1000);
@@ -34,10 +45,7 @@ export default function VolunteerDonate() {
       await client.post('/volunteer-applications/', { message });
       setVolDone(true); setMessage('');
     } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-        'Could not submit your application. Volunteer applications can only be sent from a Volunteer account.'
-      );
+      setError(err.response?.data?.detail || t('vd_error_volunteer'));
     }
   }
 
@@ -49,7 +57,7 @@ export default function VolunteerDonate() {
       setDonDone(true);
       loadHistory();
     } catch {
-      setError('Could not submit. Make sure you are logged in.');
+      setError(t('vd_error_donate'));
     }
   }
 
@@ -58,30 +66,30 @@ export default function VolunteerDonate() {
   return (
     <div className="page container">
       <div className="section-head">
-        <h2>Volunteer &amp; Donate</h2>
-        <p>Partnering with local anti-cancer organizations, including the Africa Cancer Foundation.</p>
+        <h2>{t('vd_title')}</h2>
+        <p>{t('vd_sub')}</p>
       </div>
       <div className="tabs">
-        <button className={tab === 'volunteer' ? 'active' : ''} onClick={() => setTab('volunteer')}>Volunteer</button>
-        <button className={tab === 'donate' ? 'active' : ''} onClick={() => setTab('donate')}>Donate</button>
+        <button className={tab === 'volunteer' ? 'active' : ''} onClick={() => setTab('volunteer')}>{t('vd_tab_volunteer')}</button>
+        <button className={tab === 'donate' ? 'active' : ''} onClick={() => setTab('donate')}>{t('vd_tab_donate')}</button>
       </div>
       {error && <div className="error-box" style={{ maxWidth: 480, margin: '0 auto 14px' }}>{error}</div>}
 
       {tab === 'volunteer' && (
         <form className="form-card" onSubmit={submitVolunteer}>
           <div className="field">
-            <label>Why do you want to volunteer?</label>
+            <label>{t('vd_volunteer_question')}</label>
             <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} required />
           </div>
-          <button className="btn btn-primary" style={{ width: '100%' }}>Submit application</button>
-          {volDone && <div className="success-box">Thanks. Your volunteer application has been received.</div>}
+          <button className="btn btn-primary" style={{ width: '100%' }}>{t('vd_volunteer_submit')}</button>
+          {volDone && <div className="success-box">{t('vd_volunteer_success')}</div>}
         </form>
       )}
 
       {tab === 'donate' && (
         <div className="form-card" style={{ maxWidth: 520 }}>
           <form onSubmit={submitDonation}>
-            <label>Amount (KES)</label>
+            <label>{t('vd_donate_amount_label')}</label>
             <div style={{ display: 'flex', gap: 8, margin: '8px 0 10px', flexWrap: 'wrap' }}>
               {PRESETS.map(a => (
                 <div key={a}
@@ -96,40 +104,40 @@ export default function VolunteerDonate() {
                 </div>
               ))}
             </div>
-            {IMPACT[amount] && (
+            {impact[amount] && (
               <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', margin: '0 0 12px', lineHeight: 1.5 }}>
-                {IMPACT[amount]}
+                {impact[amount]}
               </p>
             )}
             <div className="field">
-              <label>Custom amount</label>
+              <label>{t('vd_donate_custom_label')}</label>
               <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} />
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 14 }}>
               <input type="checkbox" checked={anonymous} onChange={e => setAnonymous(e.target.checked)} />
-              Give anonymously (don't show my name in any acknowledgement)
+              {t('vd_donate_anonymous')}
             </label>
-            <button className="btn btn-primary" style={{ width: '100%' }}>Donate (simulated)</button>
-            {donDone && <div className="success-box">This is a simulated transaction. No real payment was processed.</div>}
+            <button className="btn btn-primary" style={{ width: '100%' }}>{t('vd_donate_submit')}</button>
+            {donDone && <div className="success-box">{t('vd_donate_success')}</div>}
           </form>
 
           <p style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 12, lineHeight: 1.5 }}>
-            Impact figures above are illustrative estimates for this project, not audited costs.
+            {t('vd_donate_disclaimer')}
           </p>
 
           <div style={{ borderTop: '1px solid var(--border)', marginTop: 16, paddingTop: 14 }}>
-            <h3 style={{ fontSize: 14, margin: '0 0 10px' }}>My donation history</h3>
+            <h3 style={{ fontSize: 14, margin: '0 0 10px' }}>{t('vd_history_heading')}</h3>
             {history.length === 0 && (
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>No donations recorded yet.</p>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t('vd_history_empty')}</p>
             )}
             {history.length > 0 && (
               <>
                 <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                  {history.length} donation{history.length > 1 ? 's' : ''} · KES {totalGiven.toLocaleString()} total (simulated)
+                  {history.length} {t('vd_history_count_label')} · KES {totalGiven.toLocaleString()} {t('vd_history_total')}
                 </div>
                 {history.map(d => (
                   <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                    <span>KES {Number(d.amount_kes).toLocaleString()}{d.is_anonymous && <span className="tag" style={{ marginLeft: 8 }}>anonymous</span>}</span>
+                    <span>KES {Number(d.amount_kes).toLocaleString()}{d.is_anonymous && <span className="tag" style={{ marginLeft: 8 }}>{t('vd_anonymous_tag')}</span>}</span>
                     <span style={{ color: 'var(--text-secondary)' }}>{new Date(d.created_at).toLocaleDateString()}</span>
                   </div>
                 ))}
