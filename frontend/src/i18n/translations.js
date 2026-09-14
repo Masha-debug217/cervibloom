@@ -226,14 +226,6 @@ export const translations = {
     auth_error_registration: 'Registration failed.',
     auth_error_login: 'Incorrect username or password.',
 
-    // About
-    about_title: 'About CerviBloom',
-    about_sub: 'Cervical cancer awareness, screening, and volunteering, built for Kenya.',
-    about_p1: 'Cervical cancer is the leading cause of cancer deaths among Kenyan women, and it is also one of the most preventable cancers where women have access to vaccination, screening, and timely care. CerviBloom exists to close the gap between that knowledge and the people who need it: plain-English information, a directory of real public screening facilities, a guided symptom check-in, and a way for volunteers and donors to support the organizations doing the work on the ground.',
-    about_p2: 'The platform has two account types. Any signed-up User can track their own screening journey, log symptoms through the Symptom Navigator, apply to volunteer, and donate. Admins manage the Info Hub content, the screening directory, and volunteer applications.',
-    about_p3: "Facility data in the Screening Directory is compiled from public WHO Africa and Kenya Ministry of Health reporting on the National Cervical Cancer Elimination Action Plan and the Women's Integrated Cancer Services (WICS) project.",
-    about_p4: 'CerviBloom is an independent platform. It is not affiliated with any hospital or government body, and nothing on this platform is a medical diagnosis. Always consult a qualified healthcare provider about your own symptoms or screening schedule.',
-
     // Contact
     contact_title: 'Contact Us',
     contact_sub: "CerviBloom doesn't have a large support team yet, but feedback is welcome and read.",
@@ -500,14 +492,6 @@ export const translations = {
     auth_create_one: 'Fungua moja',
     auth_error_registration: 'Kufungua akaunti kumeshindikana.',
     auth_error_login: 'Jina la mtumiaji au nywila si sahihi.',
-
-    // About
-    about_title: 'Kuhusu CerviBloom',
-    about_sub: 'Uhamasishaji, uchunguzi, na kujitolea dhidi ya saratani ya shingo ya kizazi, kwa ajili ya Kenya.',
-    about_p1: 'Saratani ya shingo ya kizazi ndicho chanzo kikuu cha vifo vya saratani miongoni mwa wanawake wa Kenya, na pia ni miongoni mwa saratani zinazoweza kuzuiwa zaidi pale wanawake wanapopata chanjo, uchunguzi, na huduma kwa wakati. CerviBloom ipo ili kuziba pengo kati ya maarifa hayo na watu wanaoyahitaji: taarifa rahisi kueleweka, orodha ya vituo halisi vya uchunguzi vya umma, maswali ya kujichunguza dalili, na njia kwa watu wa kujitolea na wachangiaji kusaidia mashirika yanayofanya kazi hii ardhini.',
-    about_p2: 'Jukwaa hili lina aina mbili za akaunti. Mtumiaji yeyote aliyejisajili anaweza kufuatilia safari yake ya uchunguzi, kurekodi dalili kupitia Kiongozi cha Dalili, kuomba kujitolea, na kuchangia. Wasimamizi husimamia maudhui ya Taarifa, orodha ya vituo vya uchunguzi, na maombi ya kujitolea.',
-    about_p3: 'Data ya vituo katika Vituo vya Uchunguzi imekusanywa kutoka ripoti za umma za WHO Africa na Wizara ya Afya ya Kenya kuhusu Mpango wa Kitaifa wa Kutokomeza Saratani ya Shingo ya Kizazi na mradi wa Women\'s Integrated Cancer Services (WICS).',
-    about_p4: 'CerviBloom ni jukwaa huru. Halihusiani na hospitali au taasisi yoyote ya serikali, na hakuna kitu katika jukwaa hili kinachotoa utambuzi wa kitabibu. Daima wasiliana na mtoa huduma wa afya aliyehitimu kuhusu dalili zako au ratiba yako ya uchunguzi.',
 
     // Contact
     contact_title: 'Wasiliana Nasi',
