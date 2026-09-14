@@ -85,7 +85,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             'id', 'title', 'summary', 'body', 'source_name', 'source_url',
-            'title_sw', 'summary_sw', 'body_sw', 'order', 'is_bookmarked',
+            'title_sw', 'summary_sw', 'body_sw', 'category', 'order', 'is_bookmarked',
         ]
 
     def get_is_bookmarked(self, obj):

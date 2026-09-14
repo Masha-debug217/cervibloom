@@ -428,9 +428,11 @@ function MythsTab() {
 
 /* -------------------------------- Articles -------------------------------- */
 
+const ARTICLE_CATEGORIES = ['PREVENTION', 'SCREENING', 'VACCINATION', 'TREATMENT', 'RESEARCH', 'WELLBEING', 'GENERAL'];
+
 const BLANK_ARTICLE = {
   title: '', summary: '', body: '', title_sw: '', summary_sw: '', body_sw: '',
-  source_name: '', source_url: '', order: 0,
+  source_name: '', source_url: '', order: 0, category: 'GENERAL',
 };
 
 function ArticlesTab() {
@@ -451,6 +453,7 @@ function ArticlesTab() {
       title: a.title, summary: a.summary, body: a.body,
       title_sw: a.title_sw ?? '', summary_sw: a.summary_sw ?? '', body_sw: a.body_sw ?? '',
       source_name: a.source_name ?? '', source_url: a.source_url ?? '', order: a.order,
+      category: a.category ?? 'GENERAL',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -491,6 +494,9 @@ function ArticlesTab() {
           <input style={inputStyle} placeholder="Source URL (optional)" value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} />
           <input style={{ ...inputStyle, width: 100 }} type="number" placeholder="Order" value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })} />
         </div>
+        <select style={{ ...inputStyle, marginBottom: 8 }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+          {ARTICLE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-primary" disabled={busy}>{editingId ? 'Save changes' : 'Add article'}</button>
           {editingId && <button type="button" className="btn btn-outline" onClick={resetForm}>Cancel</button>}

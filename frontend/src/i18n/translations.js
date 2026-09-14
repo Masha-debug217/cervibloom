@@ -122,20 +122,8 @@ export const translations = {
     infohub_open_directory: 'Open the Screening Directory →',
 
     // Articles
-    articles_title: 'Articles',
-    articles_sub: 'Longer reads on the science behind HPV, screening, and prevention.',
-    articles_tab_all: 'All articles',
-    articles_tab_saved: 'Saved',
-    articles_error: 'Could not load articles. Is the backend running?',
-    articles_empty: 'No articles yet. Add them in the Django admin panel.',
-    articles_empty_saved: "You haven't saved any articles yet.",
     articles_read_more: 'Read more',
     articles_read_less: 'Show less',
-    articles_source_label: 'Source:',
-    articles_bookmark_save: 'Save',
-    articles_bookmark_saved: 'Saved',
-    articles_bookmark_sign_in: 'Sign in to save articles you want to read again.',
-    articles_bookmark_error: 'Could not update your bookmark. Please try again.',
 
     // Survivor Blog
     blog_title: 'Survivor Blog',
@@ -389,20 +377,8 @@ export const translations = {
     infohub_open_directory: 'Fungua Vituo vya Uchunguzi →',
 
     // Makala (Articles)
-    articles_title: 'Makala',
-    articles_sub: 'Makala marefu kuhusu sayansi nyuma ya HPV, uchunguzi, na kinga.',
-    articles_tab_all: 'Makala yote',
-    articles_tab_saved: 'Yaliyohifadhiwa',
-    articles_error: 'Imeshindwa kupakia makala. Je, seva ya nyuma inafanya kazi?',
-    articles_empty: 'Hakuna makala bado. Yaongeze kwenye paneli ya msimamizi ya Django.',
-    articles_empty_saved: 'Bado hujahifadhi makala yoyote.',
     articles_read_more: 'Soma zaidi',
     articles_read_less: 'Onyesha kidogo',
-    articles_source_label: 'Chanzo:',
-    articles_bookmark_save: 'Hifadhi',
-    articles_bookmark_saved: 'Imehifadhiwa',
-    articles_bookmark_sign_in: 'Ingia ili kuhifadhi makala unayotaka kusoma tena.',
-    articles_bookmark_error: 'Imeshindwa kusasisha uhifadhi wako. Tafadhali jaribu tena.',
 
     // Blogu ya Manusura (Survivor Blog)
     blog_title: 'Blogu ya Manusura',

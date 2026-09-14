@@ -147,6 +147,7 @@ class Command(BaseCommand):
                 "WHO / IARC public guidance",
                 "https://www.who.int/news-room/fact-sheets/detail/cervical-cancer",
                 1,
+                Article.Category.GENERAL,
             ),
             (
                 "WHO's Plan to Eliminate Cervical Cancer",
@@ -192,6 +193,7 @@ class Command(BaseCommand):
                 "WHO Cervical Cancer Elimination Initiative",
                 "https://www.who.int/initiatives/cervical-cancer-elimination-initiative",
                 2,
+                Article.Category.RESEARCH,
             ),
             (
                 "Self-Sampling: Making HPV Testing Easier to Reach",
@@ -234,6 +236,7 @@ class Command(BaseCommand):
                 "WHO / IARC public guidance",
                 "",
                 3,
+                Article.Category.SCREENING,
             ),
             (
                 "Why the HPV Vaccine Works Best Given Early",
@@ -274,20 +277,25 @@ class Command(BaseCommand):
                 "Global HPV vaccine research consensus",
                 "",
                 4,
+                Article.Category.VACCINATION,
             ),
         ]
-        for title, summary, body, title_sw, summary_sw, body_sw, source_name, source_url, order in articles:
+        for title, summary, body, title_sw, summary_sw, body_sw, source_name, source_url, order, category in articles:
             obj, created = Article.objects.get_or_create(
                 title=title,
                 defaults={
                     'summary': summary, 'body': body,
                     'title_sw': title_sw, 'summary_sw': summary_sw, 'body_sw': body_sw,
                     'source_name': source_name, 'source_url': source_url, 'order': order,
+                    'category': category,
                 }
             )
             if not created and not obj.title_sw:
                 obj.title_sw, obj.summary_sw, obj.body_sw = title_sw, summary_sw, body_sw
                 obj.save(update_fields=['title_sw', 'summary_sw', 'body_sw'])
+            if not created and obj.category != category:
+                obj.category = category
+                obj.save(update_fields=['category'])
             self.stdout.write(f"{'Created' if created else 'Already exists'}: {obj.title}")
 
         self.stdout.write(self.style.SUCCESS('Seeding complete.'))

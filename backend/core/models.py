@@ -157,6 +157,15 @@ class Article(models.Model):
     research, prevention, and treatment), admin-editable like FAQItem and
     MythFact rather than hardcoded in the frontend.
     """
+    class Category(models.TextChoices):
+        PREVENTION = "PREVENTION", "Prevention"
+        SCREENING = "SCREENING", "Screening"
+        VACCINATION = "VACCINATION", "Vaccination"
+        TREATMENT = "TREATMENT", "Treatment"
+        RESEARCH = "RESEARCH", "Research"
+        WELLBEING = "WELLBEING", "Wellbeing"
+        GENERAL = "GENERAL", "General"
+
     title = models.CharField(max_length=255)
     summary = models.CharField(max_length=400, help_text="Short teaser shown in the article list.")
     body = models.TextField(help_text="Full article text.")
@@ -174,6 +183,7 @@ class Article(models.Model):
     body_sw = models.TextField(
         blank=True, help_text="Kiswahili translation. Optional; falls back to the English body."
     )
+    category = models.CharField(max_length=20, choices=Category.choices, default=Category.GENERAL)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
