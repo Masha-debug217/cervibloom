@@ -36,11 +36,13 @@ function Table({ columns, children }) {
 /* ------------------------------- Facilities ------------------------------ */
 
 const STOCK_OPTIONS = ['UNKNOWN', 'IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'];
+const FACILITY_TYPES = ['PUBLIC', 'PRIVATE', 'NGO', 'HEALTH_CENTRE'];
 
 const BLANK_FACILITY = {
   name: '', county: '', address: '', services: '', services_sw: '',
   latitude: '', longitude: '', source_note: '', is_wics_site: false,
   hpv_vaccine_stock: 'UNKNOWN', pap_smear_kit_stock: 'UNKNOWN',
+  facility_type: 'PUBLIC', phone: '', open_days: '', open_hours: '',
 };
 
 function FacilitiesTab() {
@@ -64,6 +66,8 @@ function FacilitiesTab() {
       source_note: f.source_note ?? '', is_wics_site: !!f.is_wics_site,
       hpv_vaccine_stock: f.hpv_vaccine_stock ?? 'UNKNOWN',
       pap_smear_kit_stock: f.pap_smear_kit_stock ?? 'UNKNOWN',
+      facility_type: f.facility_type ?? 'PUBLIC',
+      phone: f.phone ?? '', open_days: f.open_days ?? '', open_hours: f.open_hours ?? '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -105,6 +109,14 @@ function FacilitiesTab() {
         <input style={inputStyle} placeholder="Latitude" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
         <input style={inputStyle} placeholder="Longitude" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
         <input style={inputStyle} placeholder="Source note" value={form.source_note} onChange={(e) => setForm({ ...form, source_note: e.target.value })} />
+        <label style={{ fontSize: 12 }}>Facility type
+          <select style={inputStyle} value={form.facility_type} onChange={(e) => setForm({ ...form, facility_type: e.target.value })}>
+            {FACILITY_TYPES.map((ft) => <option key={ft} value={ft}>{ft}</option>)}
+          </select>
+        </label>
+        <input style={inputStyle} placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <input style={inputStyle} placeholder="Open days, e.g. Mon - Fri (optional)" value={form.open_days} onChange={(e) => setForm({ ...form, open_days: e.target.value })} />
+        <input style={inputStyle} placeholder="Open hours, e.g. 8:00 AM - 5:00 PM (optional)" value={form.open_hours} onChange={(e) => setForm({ ...form, open_hours: e.target.value })} />
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
           <input type="checkbox" checked={form.is_wics_site} onChange={(e) => setForm({ ...form, is_wics_site: e.target.checked })} />
           WICS project site

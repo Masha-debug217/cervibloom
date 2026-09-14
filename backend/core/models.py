@@ -13,11 +13,29 @@ class Facility(models.Model):
         LOW_STOCK = "LOW_STOCK", "Low stock"
         OUT_OF_STOCK = "OUT_OF_STOCK", "Out of stock"
 
+    class FacilityType(models.TextChoices):
+        PUBLIC = "PUBLIC", "Public Hospital"
+        PRIVATE = "PRIVATE", "Private Clinic"
+        NGO = "NGO", "NGO Clinic"
+        HEALTH_CENTRE = "HEALTH_CENTRE", "Health Centre"
+
     name = models.CharField(max_length=200)
     county = models.CharField(max_length=100)
     address = models.CharField(max_length=255, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+    facility_type = models.CharField(
+        max_length=20, choices=FacilityType.choices, default=FacilityType.PUBLIC
+    )
+    phone = models.CharField(
+        max_length=30, blank=True, help_text="Optional; shown as a Call button when set."
+    )
+    open_days = models.CharField(
+        max_length=100, blank=True, help_text="Optional, e.g. 'Mon - Fri'."
+    )
+    open_hours = models.CharField(
+        max_length=100, blank=True, help_text="Optional, e.g. '8:00 AM - 5:00 PM'."
+    )
     services = models.CharField(
         max_length=255,
         help_text="Comma-separated, e.g. 'VIA, Pap smear, Treatment'"
