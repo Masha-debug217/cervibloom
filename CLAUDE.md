@@ -30,11 +30,42 @@ content and applications).
 
 ## Design system
 
-`frontend/src/theme.css` is the whole design system (plum primary, rose
-tints, Poppins/Inter) and is frozen: it was built to match an existing
-Figma design. Reuse its tokens and classes. Do not change colors, fonts,
-icons, or overall visual style, and do not introduce a second styling
-approach (CSS-in-JS, a different CSS framework, etc.) alongside it.
+The brand palette (plum `#7A1F3D` primary, rose-pink `#E85D8A` in dark
+mode, Poppins for headings, Inter for body) is fixed. As of the Tailwind
+migration, the system is mid-transition between two layers:
+
+- `frontend/src/styles/globals.css` is the source of truth for color
+  tokens (`--primary`, `--background`, `--foreground`, `--card`,
+  `--secondary`, `--muted`, `--accent`, `--border`, plus `success`/
+  `warning`/`info`/`blush`/`rose-pink`) and Tailwind's own utility
+  layer, including shared classes like `.btn-primary`, `.btn-outline`,
+  `.card-base`, `.container-base`, `.section-padding`, `.nav-link`. Dark
+  mode is the `.dark` class on `<html>`, toggled and persisted by
+  `frontend/src/App.jsx`. New or redesigned pages should be built with
+  Tailwind utility classes against these tokens, matching the structure
+  of `frontend/src/components/home/*.jsx`.
+- `frontend/src/theme.css` holds the older hand-written component classes
+  (`.panel`, `.tag`, `.faq-item`, `.facility-card`, `.form-card`, etc.)
+  still used by pages that haven't been redesigned yet. It aliases the
+  old variable names (`--bg`, `--surface`, `--surface-alt`, `--text`,
+  `--text-secondary`, `--primary-tint`) to the new tokens so those pages
+  keep working unchanged. Don't add new colors here; when a page gets
+  its Tailwind redesign, retire its old classes from this file instead
+  of maintaining both.
+- Reuse `lucide-react` for icons in new/redesigned components rather
+  than emoji or a different icon set.
+- Gotcha: `theme.css` still has a blanket
+  `input[type=text], input[type=email], ...{padding:10px 12px; ...}`
+  rule for old pages' plain `<input>`/`<textarea>` fields. Its element +
+  attribute selector beats a same-specificity Tailwind utility class, so
+  a new Tailwind `<input>`'s `px-*`/`py-*` padding gets silently
+  overridden (this is how a search icon ended up sitting on top of the
+  placeholder text). Prefix padding utilities on any new Tailwind input
+  with `!` (e.g. `!pl-10 !pr-4 !py-3`) to force them to win.
+- A sticky in-page sub-nav (like Info Hub's Topics/FAQ/Myths/Articles
+  tab strip) needs `top-16` to sit below the site header, not `top-0`;
+  the header is itself `sticky top-0` and exactly `h-16` tall, so two
+  elements both pinned to `top-0` overlap instead of stacking.
 
 ## Internationalization
 
