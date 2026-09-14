@@ -89,7 +89,7 @@ export default function SurvivorBlog() {
           {!user ? (
             <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
               {t('blog_sign_in_prompt')}{' '}
-              <Link to="/auth" style={{ color: 'var(--primary)', fontWeight: 600 }}>{t('nav_signin_join')}</Link>
+              <Link to="/auth" style={{ color: 'var(--primary)', fontWeight: 600 }}>{t('nav_signin')}</Link>
             </p>
           ) : (
             <>
