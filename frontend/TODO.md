@@ -24,9 +24,11 @@ translation editable in the Admin console, falling back to English when
 blank.
 
 ### InfoHub
-Done: added an "Understanding Cervical Cancer" section (what it is, causes,
-prevention, signs, treatment) above the existing FAQ and Myth vs. Fact
-sections, all bilingual.
+Done: redesigned with Tailwind (health topics accordion, FAQ accordion,
+a 3D flip-card Myths vs Facts grid, a keyword search, and an Articles
+CTA), matching the Home page's new visual system. FAQ and myth content
+still comes from the backend and stays admin-editable; only the topics
+are fixed shipped content, matching the Symptom Navigator's pattern.
 
 ### Articles
 Done: added a bilingual Articles page under the Info Hub, seeded with four
