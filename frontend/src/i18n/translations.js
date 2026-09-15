@@ -197,22 +197,6 @@ export const translations = {
     vd_anonymous_tag: 'anonymous',
 
     // Auth
-    auth_join_title: 'Join CerviBloom',
-    auth_join_sub: 'Track symptoms, get screening reminders, find care nearby, volunteer, and donate, all from one account.',
-    auth_username: 'Username',
-    auth_email: 'Email',
-    auth_county: 'County',
-    auth_password: 'Password (min. 8 characters)',
-    auth_password_short: 'Password',
-    auth_create_account: 'Create account',
-    auth_creating: 'Creating account…',
-    auth_have_account: 'Already have an account?',
-    auth_sign_in: 'Sign in',
-    auth_signing_in: 'Signing in…',
-    auth_need_account: 'Need an account?',
-    auth_create_one: 'Create one',
-    auth_error_registration: 'Registration failed.',
-    auth_error_login: 'Incorrect username or password.',
 
     // Contact
     contact_title: 'Contact Us',
@@ -452,22 +436,6 @@ export const translations = {
     vd_anonymous_tag: 'bila kutambulika',
 
     // Auth
-    auth_join_title: 'Jiunge na CerviBloom',
-    auth_join_sub: 'Fuatilia dalili, pata vikumbusho vya uchunguzi, tafuta huduma karibu nawe, jitolee, na uchangie, yote kwa akaunti moja.',
-    auth_username: 'Jina la mtumiaji',
-    auth_email: 'Barua pepe',
-    auth_county: 'Kaunti',
-    auth_password: 'Nywila (angalau herufi 8)',
-    auth_password_short: 'Nywila',
-    auth_create_account: 'Fungua akaunti',
-    auth_creating: 'Inafungua akaunti…',
-    auth_have_account: 'Una akaunti tayari?',
-    auth_sign_in: 'Ingia',
-    auth_signing_in: 'Inaingia…',
-    auth_need_account: 'Unahitaji akaunti?',
-    auth_create_one: 'Fungua moja',
-    auth_error_registration: 'Kufungua akaunti kumeshindikana.',
-    auth_error_login: 'Jina la mtumiaji au nywila si sahihi.',
 
     // Contact
     contact_title: 'Wasiliana Nasi',
