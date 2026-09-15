@@ -96,7 +96,19 @@ open_hours fields. No reminder notifications, since there's no email/SMS
 infrastructure to send them.
 
 ### Community
-Community posting things such as events, Call to actions for volunteering, volunteer badge, posting certificates.
+Dropped. Researched how real cancer/health nonprofits handle this (American
+Cancer Society's volunteer hub, Cervivor's survivor community): none of them
+run an open user-post social feed on their own site. They publish curated,
+org-written content (volunteer spotlights, an events calendar, story
+archives) and point people to established platforms like Facebook or
+Instagram for actual back-and-forth social interaction, rather than
+building and moderating their own feed. An open feed on a health platform
+also means moderating unvetted posts in a space people may bring symptoms
+or diagnoses into, which is a real liability this project isn't set up to
+carry. Everything the original idea asked for already exists in a more
+appropriate form: events (`/events`), volunteering call-to-action and
+badges (`/get-involved`), and printable certificates (Dashboard). Nothing
+new needed here.
 
 ### Profile Page
 Users
