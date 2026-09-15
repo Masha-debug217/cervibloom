@@ -53,20 +53,32 @@ users health guidance needs to be transparent and reproducible, not a
 model that can hallucinate.
 
 ### Donations
-Ranked top 10, using payhero, public/anonymous, donations going to cancer organization like National Cancer Institute Kenya, CureCervicalCancer, 5% maintainance fee. 
-Impact Notes for your donations.
+Done: built as part of Get Involved (`/get-involved`). Ranked top 10
+leaderboard, public/anonymous giving, no account required, any amount
+accepted (no minimum). Payment is simulated, clearly labeled as such;
+PayHero/M-Pesa isn't connected yet since that needs a real PayHero
+business account and till/paybill number, not something to fabricate.
+The "5% maintenance fee" and specific recipient orgs from the original
+idea aren't shown, since no real payment relationship exists to route
+funds through yet.
 
 ### Volunteer
-People can sign up to vounteer for community service in charity events ie Medical and non-medical volunteer.
+Done: built as part of Get Involved. Six fixed roles (three medical,
+three community/outreach) with license/background requirements shown up
+front, a sign-in-gated application form, and a status tracker
+(Submitted → Approved → Active → Completed).
 
 #### Volunteer certificates
-Downloadable after volunteering. and badges
+Done: real printable certificate (browser print-to-PDF) for completed
+applications, plus badges computed live from a volunteer's own real
+application history (not pre-awarded to anyone).
 
 ### Events
 Showcasing cervical cancer events and booking, adding the voluntering to the event, 
 
 ### Screening Centers
-Screening centers near you, directions.
+Done: built earlier as the Screening Directory (`/directory`), with
+real facility data, county/service filters, and Get Directions links.
 
 ### Appointments
 Booking appointments to hospitals, showing info like hours availability etc, reminder notifications.
