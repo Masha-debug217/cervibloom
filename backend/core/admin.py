@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Facility, SymptomLog, ScreeningReminder,
+    Facility, SymptomLog, ScreeningReminder, AppointmentRequest,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
     Article, ArticleBookmark, BlogPost, Event, EventRSVP
 )
@@ -42,6 +42,11 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ['title', 'start_date', 'county']
     list_filter = ['county']
     ordering = ['start_date']
+
+@admin.register(AppointmentRequest)
+class AppointmentRequestAdmin(admin.ModelAdmin):
+    list_display = ['patient', 'facility', 'preferred_date', 'status']
+    list_filter = ['status']
 
 admin.site.register(SymptomLog)
 admin.site.register(ScreeningReminder)

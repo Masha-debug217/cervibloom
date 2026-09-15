@@ -173,6 +173,13 @@ export const translations = {
     dashboard_history_heading: 'Navigator history',
     dashboard_history_empty: 'No entries logged yet.',
     dashboard_no_symptoms: 'No symptoms',
+    dashboard_appointments_heading: 'My appointment requests',
+    dashboard_appointments_empty: "No requests yet. Find a facility in the Screening Directory and request a visit.",
+    dashboard_appointment_note: 'A request, not a confirmed booking; the facility may call to confirm.',
+    dashboard_appointment_status_pending: 'Pending',
+    dashboard_appointment_status_confirmed: 'Confirmed',
+    dashboard_appointment_status_declined: 'Declined',
+    dashboard_appointment_status_completed: 'Completed',
 
     // Volunteer & Donate
 
@@ -392,6 +399,13 @@ export const translations = {
     dashboard_history_heading: 'Historia ya Kiongozi',
     dashboard_history_empty: 'Bado hakuna maingizo yaliyorekodiwa.',
     dashboard_no_symptoms: 'Hakuna dalili',
+    dashboard_appointments_heading: 'Maombi yangu ya miadi',
+    dashboard_appointments_empty: 'Bado hakuna maombi. Tafuta kituo katika Orodha ya Uchunguzi na uombe ziara.',
+    dashboard_appointment_note: 'Ni ombi, si miadi iliyothibitishwa; kituo kinaweza kupiga simu kuthibitisha.',
+    dashboard_appointment_status_pending: 'Inasubiri',
+    dashboard_appointment_status_confirmed: 'Imethibitishwa',
+    dashboard_appointment_status_declined: 'Imekataliwa',
+    dashboard_appointment_status_completed: 'Imekamilika',
 
     // Volunteer & Donate
 

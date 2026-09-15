@@ -10,6 +10,13 @@ const TIER_STYLE = {
   SEEK_CARE: { bg: 'var(--primary-tint)', accent: 'var(--primary)' },
 };
 
+const APPOINTMENT_STATUS_STYLE = {
+  PENDING: { bg: 'var(--surface-alt)', accent: 'var(--text-secondary)' },
+  CONFIRMED: { bg: 'var(--primary-tint)', accent: 'var(--primary)' },
+  DECLINED: { bg: 'var(--surface-alt)', accent: '#b3261e' },
+  COMPLETED: { bg: 'var(--surface-alt)', accent: 'var(--text-secondary)' },
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { language, t } = useLanguage();
@@ -21,6 +28,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState([]);
   const [reminder, setReminder] = useState(null);
   const [facilities, setFacilities] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -36,6 +44,7 @@ export default function Dashboard() {
     loadLogs();
     client.get('/screening-reminders/').then(res => setReminder(res.data[0] || null)).catch(() => {});
     client.get('/facilities/').then(res => setFacilities(res.data)).catch(() => {});
+    client.get('/appointment-requests/').then(res => setAppointments(res.data)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -186,6 +195,41 @@ export default function Dashboard() {
               <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>{t('dashboard_reminder_empty')}</p>
             )}
             <Link className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }} to="/directory">{t('dashboard_find_center')}</Link>
+          </div>
+          <div className="panel" style={{ marginBottom: 16 }}>
+            <h3>{t('dashboard_appointments_heading')}</h3>
+            {appointments.length === 0 ? (
+              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>{t('dashboard_appointments_empty')}</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>{t('dashboard_appointment_note')}</p>
+                {appointments.map(a => {
+                  const style = APPOINTMENT_STATUS_STYLE[a.status] || APPOINTMENT_STATUS_STYLE.PENDING;
+                  const statusKey = `dashboard_appointment_status_${a.status.toLowerCase()}`;
+                  return (
+                    <div key={a.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.facility_name}</div>
+                          <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                            {a.preferred_date}{a.preferred_time ? `, ${a.preferred_time}` : ''}
+                          </div>
+                          {a.admin_note && (
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{a.admin_note}</div>
+                          )}
+                        </div>
+                        <span style={{
+                          fontSize: 11.5, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
+                          background: style.bg, color: style.accent, whiteSpace: 'nowrap',
+                        }}>
+                          {t(statusKey)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
           <div className="panel">
             <h3>{t('dashboard_history_heading')}</h3>

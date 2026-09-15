@@ -85,7 +85,15 @@ Done: built earlier as the Screening Directory (`/directory`), with
 real facility data, county/service filters, and Get Directions links.
 
 ### Appointments
-Booking appointments to hospitals, showing info like hours availability etc, reminder notifications.
+Done: a "Request a Screening Visit" flow from any facility card in the
+Screening Directory (preferred date/time, reason), tracked as a real
+request an admin confirms or declines with a note, shown on the
+Dashboard. Deliberately not called "booking": no hospital scheduling
+system is integrated, so the UI says clearly this is a request the
+facility still needs to confirm by phone, not a guaranteed slot. Hours/
+availability info uses the Facility model's existing open_days/
+open_hours fields. No reminder notifications, since there's no email/SMS
+infrastructure to send them.
 
 ### Community
 Community posting things such as events, Call to actions for volunteering, volunteer badge, posting certificates.

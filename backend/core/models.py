@@ -98,6 +98,42 @@ class ScreeningReminder(models.Model):
         return f"{self.patient.username} due {self.next_due_date}"
 
 
+class AppointmentRequest(models.Model):
+    """
+    A patient's REQUEST for a screening visit at a facility - not a
+    confirmed booking. No hospital scheduling system is integrated here,
+    so this is tracked as a request an admin follows up on and marks
+    confirmed/declined, the same honesty pattern as the simulated Donate
+    flow: real record-keeping, no invented confirmation.
+    """
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        CONFIRMED = "CONFIRMED", "Confirmed"
+        DECLINED = "DECLINED", "Declined"
+        COMPLETED = "COMPLETED", "Completed"
+
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='appointment_requests')
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, related_name='appointment_requests')
+    preferred_date = models.DateField()
+    preferred_time = models.CharField(
+        max_length=50, blank=True,
+        help_text="Free text, e.g. 'Morning' or '10:00 AM' - real facility availability isn't known.",
+    )
+    reason = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    admin_note = models.CharField(
+        max_length=255, blank=True,
+        help_text="e.g. the confirmed time, or why the request was declined.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.patient.username} -> {self.facility.name} ({self.status})"
+
+
 class VolunteerApplication(models.Model):
     """Submitted when a volunteer applies for one of the fixed roles listed
     on the Get Involved page (the role catalog itself is fixed frontend

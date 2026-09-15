@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 from django.utils import timezone
 
 from core import symptom_navigator
-from core.models import SymptomLog, Article, BlogPost, Event
+from core.models import SymptomLog, Article, BlogPost, Event, Facility, AppointmentRequest
 
 User = get_user_model()
 
@@ -289,3 +289,61 @@ class EventRSVPTests(APITestCase):
         self.client.force_authenticate(self.admin)
         resp = self.client.post(f'/api/events/{self.event.id}/toggle_rsvp/')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class AppointmentRequestTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('apt_u', 'apt_u@e.com', 'testpass123')
+        self.other = User.objects.create_user('apt_other', 'apt_other@e.com', 'testpass123')
+        self.admin = User.objects.create_user('apt_adm', 'apt_adm@e.com', 'testpass123', role='ADMIN')
+        self.facility = Facility.objects.create(name='Test Hospital', county='Nairobi')
+
+    def test_request_requires_sign_in(self):
+        resp = self.client.post('/api/appointment-requests/', {
+            'facility': self.facility.id, 'preferred_date': '2026-11-01',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_user_can_create_a_request(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.post('/api/appointment-requests/', {
+            'facility': self.facility.id, 'preferred_date': '2026-11-01',
+            'preferred_time': 'Morning', 'reason': 'Routine screening',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['status'], 'PENDING')
+
+    def test_admin_cannot_create_a_request(self):
+        self.client.force_authenticate(self.admin)
+        resp = self.client.post('/api/appointment-requests/', {
+            'facility': self.facility.id, 'preferred_date': '2026-11-01',
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_only_sees_their_own_requests(self):
+        AppointmentRequest.objects.create(patient=self.user, facility=self.facility, preferred_date='2026-11-01')
+        AppointmentRequest.objects.create(patient=self.other, facility=self.facility, preferred_date='2026-11-02')
+
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/appointment-requests/')
+        self.assertEqual(len(resp.data), 1)
+
+        self.client.force_authenticate(self.admin)
+        resp = self.client.get('/api/appointment-requests/')
+        self.assertEqual(len(resp.data), 2)
+
+    def test_only_admin_can_change_status(self):
+        req = AppointmentRequest.objects.create(patient=self.user, facility=self.facility, preferred_date='2026-11-01')
+
+        self.client.force_authenticate(self.user)
+        resp = self.client.patch(f'/api/appointment-requests/{req.id}/status/', {'status': 'CONFIRMED'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(self.admin)
+        resp = self.client.patch(
+            f'/api/appointment-requests/{req.id}/status/',
+            {'status': 'CONFIRMED', 'admin_note': 'Confirmed for 10am'}, format='json'
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['status'], 'CONFIRMED')
+        self.assertEqual(resp.data['admin_note'], 'Confirmed for 10am')

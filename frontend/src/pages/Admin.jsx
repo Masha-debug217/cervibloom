@@ -156,6 +156,88 @@ function FacilitiesTab() {
   );
 }
 
+/* -------------------------- Appointment requests --------------------------- */
+
+const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'DECLINED', 'COMPLETED'];
+
+function AppointmentsTab() {
+  const [rows, setRows] = useState([]);
+  const [notes, setNotes] = useState({});
+  const [error, setError] = useState('');
+
+  const load = useCallback(() => {
+    client.get('/appointment-requests/').then((r) => {
+      setRows(r.data);
+      setNotes(Object.fromEntries(r.data.map((a) => [a.id, a.admin_note || ''])));
+    }).catch(() => setError('Could not load appointment requests.'));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function changeStatus(id, status) {
+    setError('');
+    try {
+      await client.patch(`/appointment-requests/${id}/status/`, { status, admin_note: notes[id] ?? '' });
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Could not update status.');
+    }
+  }
+
+  async function saveNote(id, currentStatus) {
+    setError('');
+    try {
+      await client.patch(`/appointment-requests/${id}/status/`, { status: currentStatus, admin_note: notes[id] ?? '' });
+      load();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Could not save note.');
+    }
+  }
+
+  return (
+    <div className="panel">
+      <h3>Appointment requests</h3>
+      <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginBottom: 12 }}>
+        These are requests, not confirmed bookings. Contact the patient or facility to confirm, then mark the status here.
+      </p>
+      {error && <div className="error-box">{error}</div>}
+      {rows.length === 0 && <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>No appointment requests yet.</p>}
+      {rows.length > 0 && (
+        <Table columns={['Patient', 'Facility', 'Preferred', 'Reason', 'Note', 'Requested', 'Status']}>
+          {rows.map((a) => (
+            <tr key={a.id}>
+              <td style={cellStyle}>{a.patient_username}</td>
+              <td style={{ ...cellStyle, maxWidth: 180 }}>{a.facility_name}</td>
+              <td style={cellStyle}>{a.preferred_date}{a.preferred_time ? `, ${a.preferred_time}` : ''}</td>
+              <td style={{ ...cellStyle, maxWidth: 180 }}>{a.reason || '—'}</td>
+              <td style={cellStyle}>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <input
+                    style={{ ...inputStyle, width: 140 }}
+                    placeholder="e.g. Confirmed 10am"
+                    value={notes[a.id] ?? ''}
+                    onChange={(e) => setNotes({ ...notes, [a.id]: e.target.value })}
+                  />
+                  <button className="btn btn-outline" style={{ padding: '5px 8px', fontSize: 12 }} onClick={() => saveNote(a.id, a.status)}>Save</button>
+                </div>
+              </td>
+              <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{new Date(a.created_at).toLocaleDateString()}</td>
+              <td style={cellStyle}>
+                <select
+                  style={{ ...inputStyle, width: 'auto' }}
+                  value={a.status}
+                  onChange={(e) => changeStatus(a.id, e.target.value)}
+                >
+                  {APPOINTMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      )}
+    </div>
+  );
+}
+
 /* -------------------------- Volunteer applications --------------------------- */
 
 const STATUSES = ['PENDING', 'APPROVED', 'ACTIVE', 'COMPLETED', 'REJECTED'];
@@ -664,6 +746,7 @@ export default function Admin() {
         <button className={tab === 'articles' ? 'active' : ''} onClick={() => setTab('articles')}>Articles</button>
         <button className={tab === 'blog' ? 'active' : ''} onClick={() => setTab('blog')}>Blog</button>
         <button className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>Events</button>
+        <button className={tab === 'appointments' ? 'active' : ''} onClick={() => setTab('appointments')}>Appointments</button>
       </div>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {tab === 'facilities' && <FacilitiesTab />}
@@ -673,6 +756,7 @@ export default function Admin() {
         {tab === 'articles' && <ArticlesTab />}
         {tab === 'blog' && <BlogTab />}
         {tab === 'events' && <EventsTab />}
+        {tab === 'appointments' && <AppointmentsTab />}
       </div>
     </div>
   );

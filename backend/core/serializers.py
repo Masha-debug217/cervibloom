@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import (
-    Facility, SymptomLog, ScreeningReminder,
+    Facility, SymptomLog, ScreeningReminder, AppointmentRequest,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
     Article, BlogPost, Event,
 )
@@ -40,6 +40,21 @@ class ScreeningReminderSerializer(serializers.ModelSerializer):
         fields = ['id', 'patient', 'next_due_date', 'guidance_note']
         # `patient` is required on write (admin sets a reminder for a given
         # patient) and simply echoed back on read.
+
+
+class AppointmentRequestSerializer(serializers.ModelSerializer):
+    facility_name = serializers.CharField(source='facility.name', read_only=True)
+    patient_username = serializers.CharField(source='patient.username', read_only=True)
+
+    class Meta:
+        model = AppointmentRequest
+        fields = [
+            'id', 'facility', 'facility_name', 'preferred_date', 'preferred_time',
+            'reason', 'status', 'admin_note', 'created_at', 'patient_username',
+        ]
+        # status/admin_note are changed only by an admin, via the set_status
+        # action (PATCH /api/appointment-requests/{id}/status/).
+        read_only_fields = ['status', 'admin_note']
 
 
 class VolunteerApplicationSerializer(serializers.ModelSerializer):

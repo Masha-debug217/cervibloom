@@ -4,12 +4,13 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from .models import (
-    Facility, SymptomLog, ScreeningReminder,
+    Facility, SymptomLog, ScreeningReminder, AppointmentRequest,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
     Article, ArticleBookmark, BlogPost, Event, EventRSVP,
 )
 from .serializers import (
     FacilitySerializer, SymptomLogSerializer, ScreeningReminderSerializer,
+    AppointmentRequestSerializer,
     VolunteerApplicationSerializer, DonationRecordSerializer, FAQItemSerializer,
     MythFactSerializer, ArticleSerializer, BlogPostSerializer,
     EventSerializer,
@@ -258,6 +259,48 @@ class ScreeningReminderViewSet(viewsets.ModelViewSet):
             patient=patient, defaults=defaults
         )
         serializer.instance = obj
+
+
+class AppointmentRequestViewSet(viewsets.ModelViewSet):
+    """A patient can create + view their own requests. Admin sees all and confirms/declines."""
+    serializer_class = AppointmentRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'ADMIN':
+            return AppointmentRequest.objects.all()
+        return AppointmentRequest.objects.filter(patient=user)
+
+    def perform_create(self, serializer):
+        if self.request.user.role == 'ADMIN':
+            raise PermissionDenied("Admin accounts cannot submit an appointment request.")
+        serializer.save(patient=self.request.user)
+
+    @action(detail=True, methods=['patch'], url_path='status')
+    def set_status(self, request, pk=None):
+        """
+        PATCH /api/appointment-requests/{id}/status/  {"status": "CONFIRMED", "admin_note": "..."}
+        ADMIN-only. admin_note is optional on each call.
+        """
+        if not (request.user.is_authenticated and request.user.role == 'ADMIN'):
+            raise PermissionDenied("Only an admin can change an appointment request's status.")
+
+        appointment = self.get_object()
+        new_status = request.data.get('status')
+        valid = [choice[0] for choice in AppointmentRequest.Status.choices]
+        if new_status not in valid:
+            return Response(
+                {'status': [f"Must be one of: {', '.join(valid)}."]},
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
+        appointment.status = new_status
+        update_fields = ['status']
+        if 'admin_note' in request.data:
+            appointment.admin_note = request.data.get('admin_note') or ''
+            update_fields.append('admin_note')
+        appointment.save(update_fields=update_fields)
+        return Response(self.get_serializer(appointment).data)
 
 
 class VolunteerApplicationViewSet(viewsets.ModelViewSet):
