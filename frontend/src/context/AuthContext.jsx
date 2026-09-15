@@ -51,8 +51,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  // Edits the signed-in user's own profile, then re-fetches /auth/me/ so
+  // `user` reflects the full saved record (the PATCH response only echoes
+  // back the writable fields, not role/username).
+  async function updateProfile(payload) {
+    await client.patch('/auth/me/', payload);
+    return fetchMe();
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

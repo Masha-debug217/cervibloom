@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, NavLink, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Globe, Moon, Sun, Menu, X, Mail, Phone, MapPin } from 'lucide-react';
+import { Globe, Moon, Sun, Menu, X, Mail, Phone, MapPin, User } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Home from './pages/Home';
@@ -9,6 +9,7 @@ import Articles from './pages/Articles';
 import SurvivorBlog from './pages/SurvivorBlog';
 import Directory from './pages/Directory';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import GetInvolved from './pages/GetInvolved';
 import Events from './pages/Events';
 import Admin from './pages/Admin';
@@ -105,6 +106,17 @@ function Nav() {
             {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
 
+          {user && !mobileOpen && (
+            <NavLink
+              to="/profile"
+              className={({ isActive }) => `w-9 h-9 rounded-full border flex items-center justify-center transition-colors duration-150 ${isActive ? 'border-primary text-primary bg-accent' : 'border-border bg-card hover:bg-accent'}`}
+              title={t('nav_profile')}
+              aria-label={t('nav_profile')}
+            >
+              <User size={16} />
+            </NavLink>
+          )}
+
           {!mobileOpen && (
             user ? (
               <button className="btn-outline text-sm whitespace-nowrap" onClick={handleSignOut}>
@@ -140,9 +152,17 @@ function Nav() {
             ))}
             <div className="mt-auto pt-4 border-t border-border">
               {user ? (
-                <button className="btn-outline w-full justify-center" onClick={handleSignOut}>
-                  {t('nav_signout')} ({user.role.toLowerCase()})
-                </button>
+                <>
+                  <NavLink
+                    to="/profile"
+                    className={({ isActive }) => `px-3 py-2.5 rounded-lg text-sm font-medium block mb-1 ${isActive ? 'bg-accent text-primary font-semibold' : 'text-muted-foreground'}`}
+                  >
+                    {t('nav_profile')}
+                  </NavLink>
+                  <button className="btn-outline w-full justify-center" onClick={handleSignOut}>
+                    {t('nav_signout')} ({user.role.toLowerCase()})
+                  </button>
+                </>
               ) : (
                 <Link className="btn-primary w-full justify-center" to="/auth">{t('nav_signin')}</Link>
               )}
@@ -226,6 +246,7 @@ export default function App() {
               <Route path="/blog" element={<SurvivorBlog />} />
               <Route path="/directory" element={<Directory />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/get-involved" element={<GetInvolved />} />
               <Route path="/events" element={<Events />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

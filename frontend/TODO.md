@@ -111,7 +111,16 @@ badges (`/get-involved`), and printable certificates (Dashboard). Nothing
 new needed here.
 
 ### Profile Page
-Users
+Done: added `/profile`, reachable from a person icon in the nav next to
+the theme toggle (and from the mobile menu). Researched how health apps
+and volunteer platforms handle this first: edit the essentials in place,
+keep sensitive fields clearly marked as self-reported and private, and
+require the current password to change it. Lets a signed-in user view and
+edit the account fields collected at signup (name, email, phone, county,
+date of birth), their self-reported health profile (last screening year,
+HPV vaccine doses), and preferred language, plus change their password
+(requires the current one first). Username and role stay fixed here,
+since they're not meant to change through self-service.
 
 ### Notifications (Feature)
 Notifications for screening appointments, dosage taking, vaccine follow ups, event dates.
