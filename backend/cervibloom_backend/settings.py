@@ -133,6 +133,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Volunteer applications can attach a professional credentials file (for
+# medical roles). Local disk storage is fine for now; swap MEDIA_ROOT for
+# real cloud storage (e.g. S3) before a production deploy.
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # --- CerviBloom custom config ---
 
 # During local dev, allow the React dev server to call this API.

@@ -282,7 +282,7 @@ class VolunteerApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='status')
     def set_status(self, request, pk=None):
         """
-        PATCH /api/volunteer-applications/{id}/status/  {"status": "CONTACTED"}
+        PATCH /api/volunteer-applications/{id}/status/  {"status": "APPROVED"}
         ADMIN-only. This is the "separate action" the serializer's
         read_only status field always referred to.
         """
@@ -301,6 +301,18 @@ class VolunteerApplicationViewSet(viewsets.ModelViewSet):
         application.save(update_fields=['status'])
         return Response(self.get_serializer(application).data)
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def stats(self, request):
+        """
+        GET /api/volunteer-applications/stats/ - public, real counts for the
+        Get Involved page header. Never a made-up round number.
+        """
+        engaged = VolunteerApplication.objects.exclude(status=VolunteerApplication.Status.REJECTED)
+        return Response({
+            'volunteer_count': engaged.values('volunteer').distinct().count(),
+            'county_count': engaged.exclude(county='').values('county').distinct().count(),
+        })
+
 
 class DonationRecordViewSet(viewsets.ModelViewSet):
     """Simulated donations - donor can create/view their own; admin sees all."""
@@ -315,3 +327,13 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(donor=self.request.user)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def leaderboard(self, request):
+        """
+        GET /api/donations/leaderboard/ - public top 10 by amount. Anonymous
+        donors are included (their amount still counts toward the public
+        total) but donor_display comes back null, same as everywhere else.
+        """
+        top = DonationRecord.objects.order_by('-amount_kes')[:10]
+        return Response(self.get_serializer(top, many=True).data)

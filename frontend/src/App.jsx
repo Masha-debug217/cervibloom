@@ -9,7 +9,7 @@ import Articles from './pages/Articles';
 import SurvivorBlog from './pages/SurvivorBlog';
 import Directory from './pages/Directory';
 import Dashboard from './pages/Dashboard';
-import VolunteerDonate from './pages/VolunteerDonate';
+import GetInvolved from './pages/GetInvolved';
 import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import About from './pages/About';
@@ -62,7 +62,7 @@ function Nav() {
     { to: '/info-hub', label: t('nav_infohub') },
     { to: '/directory', label: t('nav_directory') },
     { to: '/about', label: t('nav_about') },
-    { to: '/volunteer', label: t('nav_get_involved') },
+    { to: '/get-involved', label: t('nav_get_involved') },
     ...(role === 'USER' ? [{ to: '/dashboard', label: t('nav_dashboard') }] : []),
     ...(role === 'ADMIN' ? [{ to: '/admin', label: t('nav_admin') }] : []),
   ];
@@ -223,7 +223,7 @@ export default function App() {
               <Route path="/blog" element={<SurvivorBlog />} />
               <Route path="/directory" element={<Directory />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/volunteer" element={<ProtectedRoute><VolunteerDonate /></ProtectedRoute>} />
+              <Route path="/get-involved" element={<GetInvolved />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />

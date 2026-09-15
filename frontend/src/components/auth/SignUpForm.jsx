@@ -2,20 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Loader2, Check, Shield, Heart, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { KENYAN_COUNTIES } from '../../constants/counties';
 
 function destinationFor(role) {
   return role === 'ADMIN' ? '/admin' : '/dashboard';
 }
-
-const KENYAN_COUNTIES = [
-  'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Uasin Gishu', 'Kiambu', 'Machakos',
-  'Nyeri', 'Meru', 'Kilifi', 'Kwale', 'Kakamega', 'Bungoma', 'Siaya', 'Homa Bay',
-  'Migori', 'Kisii', 'Nyamira', 'Kericho', 'Bomet', 'Narok', 'Kajiado', 'Makueni',
-  'Kitui', 'Embu', 'Tharaka-Nithi', 'Laikipia', 'Nyandarua', "Murang'a", 'Kirinyaga',
-  'Garissa', 'Wajir', 'Mandera', 'Marsabit', 'Isiolo', 'Samburu', 'Turkana',
-  'West Pokot', 'Elgeyo-Marakwet', 'Trans-Nzoia', 'Nandi', 'Baringo', 'Vihiga',
-  'Busia', 'Tana River', 'Lamu', 'Taita-Taveta',
-];
 
 function passwordStrength(password) {
   if (!password) return { score: 0, label: '' };

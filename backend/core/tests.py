@@ -82,32 +82,41 @@ class VolunteerApplicationRoleTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user('u1', 'u1@e.com', 'testpass123')
         self.admin = User.objects.create_user('adm', 'adm@e.com', 'testpass123', role='ADMIN')
+        self.application_payload = {
+            'role': 'Community Mobilizer',
+            'category': 'NON_MEDICAL',
+            'full_name': 'Test Volunteer',
+            'phone': '+254700000000',
+            'county': 'Nairobi',
+            'availability': 'WEEKENDS',
+            'motivation': 'I want to help raise awareness.',
+        }
 
     def test_admin_cannot_create_a_volunteer_application(self):
         self.client.force_authenticate(self.admin)
-        resp = self.client.post('/api/volunteer-applications/', {'message': 'hi'}, format='json')
+        resp = self.client.post('/api/volunteer-applications/', self.application_payload, format='json')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_user_can_create_a_volunteer_application(self):
         self.client.force_authenticate(self.user)
-        resp = self.client.post('/api/volunteer-applications/', {'message': 'hi'}, format='json')
+        resp = self.client.post('/api/volunteer-applications/', self.application_payload, format='json')
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_only_admin_can_change_application_status(self):
         self.client.force_authenticate(self.user)
-        created = self.client.post('/api/volunteer-applications/', {'message': 'hi'}, format='json')
+        created = self.client.post('/api/volunteer-applications/', self.application_payload, format='json')
         app_id = created.data['id']
 
         # a regular user cannot move their own application's status
         resp = self.client.patch(f'/api/volunteer-applications/{app_id}/status/',
-                                 {'status': 'ACCEPTED'}, format='json')
+                                 {'status': 'APPROVED'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
         self.client.force_authenticate(self.admin)
         resp = self.client.patch(f'/api/volunteer-applications/{app_id}/status/',
-                                 {'status': 'CONTACTED'}, format='json')
+                                 {'status': 'APPROVED'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data['status'], 'CONTACTED')
+        self.assertEqual(resp.data['status'], 'APPROVED')
 
 
 class ArticleTests(APITestCase):

@@ -99,19 +99,44 @@ class ScreeningReminder(models.Model):
 
 
 class VolunteerApplication(models.Model):
-    """Submitted when a volunteer signs up to help with outreach."""
+    """Submitted when a volunteer applies for one of the fixed roles listed
+    on the Get Involved page (the role catalog itself is fixed frontend
+    content, like the Symptom Navigator's questions, not admin-editable)."""
     class Status(models.TextChoices):
-        PENDING = "PENDING", "Pending"
-        CONTACTED = "CONTACTED", "Contacted"
-        ACCEPTED = "ACCEPTED", "Accepted"
+        PENDING = "PENDING", "Submitted"
+        APPROVED = "APPROVED", "Approved"
+        ACTIVE = "ACTIVE", "Active"
+        COMPLETED = "COMPLETED", "Completed"
+        REJECTED = "REJECTED", "Not selected"
+
+    class Category(models.TextChoices):
+        MEDICAL = "MEDICAL", "Clinical & Medical"
+        NON_MEDICAL = "NON_MEDICAL", "Community & Outreach"
+
+    class Availability(models.TextChoices):
+        WEEKENDS = "WEEKENDS", "Weekends only"
+        WEEKDAYS = "WEEKDAYS", "Weekdays"
+        FLEXIBLE = "FLEXIBLE", "Flexible"
+        EVENTS_ONLY = "EVENTS_ONLY", "Events only"
 
     volunteer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='volunteer_applications')
-    message = models.TextField(blank=True)
+    role = models.CharField(max_length=100, help_text="e.g. 'Screening Nurse', from the fixed role catalog shown on the page.")
+    category = models.CharField(max_length=20, choices=Category.choices)
+    full_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=30)
+    county = models.CharField(max_length=100)
+    availability = models.CharField(max_length=20, choices=Availability.choices)
+    skills = models.TextField(blank=True)
+    motivation = models.TextField()
+    credentials_file = models.FileField(
+        upload_to='volunteer_credentials/', blank=True, null=True,
+        help_text="Professional credentials (e.g. KMPDC license) for medical roles. Optional.",
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.volunteer.username} - {self.status}"
+        return f"{self.volunteer.username} - {self.role} ({self.status})"
 
 
 class DonationRecord(models.Model):

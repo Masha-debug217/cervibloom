@@ -44,13 +44,13 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
     # Read-only so the admin list can show who applied without exposing
     # anything writable.
     volunteer_username = serializers.CharField(source='volunteer.username', read_only=True)
-    volunteer_county = serializers.CharField(source='volunteer.county', read_only=True)
 
     class Meta:
         model = VolunteerApplication
         fields = [
-            'id', 'message', 'status', 'submitted_at',
-            'volunteer_username', 'volunteer_county',
+            'id', 'role', 'category', 'full_name', 'phone', 'county',
+            'availability', 'skills', 'motivation', 'credentials_file',
+            'status', 'submitted_at', 'volunteer_username',
         ]
         # status is changed only by an admin, via the set_status action
         # (PATCH /api/volunteer-applications/{id}/status/).
@@ -58,9 +58,19 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
 
 
 class DonationRecordSerializer(serializers.ModelSerializer):
+    # None when is_anonymous - the frontend shows "Anonymous Supporter"
+    # instead, so the donor's identity never has to reach the client at all.
+    donor_display = serializers.SerializerMethodField()
+
     class Meta:
         model = DonationRecord
-        fields = ['id', 'amount_kes', 'is_anonymous', 'created_at']
+        fields = ['id', 'amount_kes', 'is_anonymous', 'created_at', 'donor_display']
+
+    def get_donor_display(self, obj):
+        if obj.is_anonymous:
+            return None
+        name = f"{obj.donor.first_name} {obj.donor.last_name}".strip()
+        return name or obj.donor.username
 
 
 class FAQItemSerializer(serializers.ModelSerializer):

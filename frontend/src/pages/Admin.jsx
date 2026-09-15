@@ -157,7 +157,7 @@ function FacilitiesTab() {
 
 /* -------------------------- Volunteer applications --------------------------- */
 
-const STATUSES = ['PENDING', 'CONTACTED', 'ACCEPTED'];
+const STATUSES = ['PENDING', 'APPROVED', 'ACTIVE', 'COMPLETED', 'REJECTED'];
 
 function VolunteersTab() {
   const [rows, setRows] = useState([]);
@@ -184,12 +184,17 @@ function VolunteersTab() {
       {error && <div className="error-box">{error}</div>}
       {rows.length === 0 && <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>No applications yet.</p>}
       {rows.length > 0 && (
-        <Table columns={['Volunteer', 'County', 'Message', 'Submitted', 'Status']}>
+        <Table columns={['Volunteer', 'Role', 'Category', 'County', 'Motivation', 'Credentials', 'Submitted', 'Status']}>
           {rows.map((a) => (
             <tr key={a.id}>
-              <td style={cellStyle}>{a.volunteer_username}</td>
-              <td style={cellStyle}>{a.volunteer_county || 'Not given'}</td>
-              <td style={{ ...cellStyle, maxWidth: 320 }}>{a.message}</td>
+              <td style={cellStyle}>{a.volunteer_username}<br /><span style={{ color: 'var(--text-secondary)' }}>{a.full_name} · {a.phone}</span></td>
+              <td style={cellStyle}>{a.role}</td>
+              <td style={cellStyle}>{a.category === 'MEDICAL' ? 'Clinical & Medical' : 'Community & Outreach'}</td>
+              <td style={cellStyle}>{a.county}</td>
+              <td style={{ ...cellStyle, maxWidth: 260 }}>{a.motivation}{a.skills && <><br /><span style={{ color: 'var(--text-secondary)' }}>Skills: {a.skills}</span></>}</td>
+              <td style={cellStyle}>
+                {a.credentials_file ? <a href={a.credentials_file} target="_blank" rel="noreferrer">View file</a> : '—'}
+              </td>
               <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{new Date(a.submitted_at).toLocaleDateString()}</td>
               <td style={cellStyle}>
                 <select
