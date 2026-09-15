@@ -35,7 +35,7 @@ export default function DonateTab({ t }) {
 
   async function handleDonate(e) {
     e.preventDefault();
-    if (!finalAmount || finalAmount < 100) return;
+    if (!finalAmount || finalAmount < 1) return;
     setError('');
     setBusy(true);
     try {
@@ -131,10 +131,10 @@ export default function DonateTab({ t }) {
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">KES</span>
                 <input
                   type="number"
-                  placeholder={t('Custom amount (min. 100)', 'Kiasi maalum (kiwango cha chini 100)')}
+                  placeholder={t('Custom amount', 'Kiasi maalum')}
                   value={customAmount}
                   onChange={(e) => { setCustomAmount(e.target.value); setSelectedAmount(null); }}
-                  min={100}
+                  min={1}
                   className="input-field !pl-14"
                 />
               </div>
@@ -190,7 +190,7 @@ export default function DonateTab({ t }) {
               </div>
             )}
 
-            <button type="submit" disabled={!finalAmount || finalAmount < 100 || busy} className="btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={!finalAmount || finalAmount < 1 || busy} className="btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed">
               {finalAmount
                 ? `${t('Donate', 'Changia')} KES ${finalAmount.toLocaleString()}`
                 : t('Select an amount to continue', 'Chagua kiasi kuendelea')}

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import (
@@ -62,7 +64,9 @@ class DonationRecordSerializer(serializers.ModelSerializer):
     # frontend shows "Anonymous Supporter" instead, so an anonymous donor's
     # identity never has to reach the client at all.
     donor_display = serializers.SerializerMethodField()
-    amount_kes = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=100)
+    # No minimum donation amount - just ruling out zero/negative, which
+    # aren't a real donation at all.
+    amount_kes = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'))
 
     class Meta:
         model = DonationRecord
