@@ -143,8 +143,22 @@ class DonationRecord(models.Model):
     """
     A SIMULATED donation - no real payment processing.
     Exists purely so the flow and reporting can be demonstrated.
+
+    donor is nullable so donating doesn't require an account (matching how
+    real Kenyan donation platforms like M-Changa work: contributing to a
+    fundraiser doesn't require the contributor to have an account, only the
+    organizer does). A signed-in donor is still attached for their own
+    donation history; a guest donor is not, and can optionally supply
+    donor_name to be credited on the public leaderboard instead.
     """
-    donor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='donations')
+    donor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='donations',
+    )
+    donor_name = models.CharField(
+        max_length=150, blank=True,
+        help_text="Only used for a guest (not signed in) donation's public leaderboard credit.",
+    )
     amount_kes = models.DecimalField(max_digits=10, decimal_places=2)
     is_anonymous = models.BooleanField(
         default=False,
@@ -153,7 +167,12 @@ class DonationRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        who = "Anonymous" if self.is_anonymous else self.donor.username
+        if self.is_anonymous:
+            who = "Anonymous"
+        elif self.donor:
+            who = self.donor.username
+        else:
+            who = self.donor_name or "Guest"
         return f"{who} - KES {self.amount_kes} (simulated)"
 
 

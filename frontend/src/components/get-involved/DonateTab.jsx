@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Heart, CheckCircle2, Eye, EyeOff, Info, Shield, TrendingUp, Zap } from 'lucide-react';
 import client from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
-import SignInGate from './SignInGate';
 
 const DONATION_TIERS = [
   { amount: 500, impact: { en: 'Funds 1 cervical screening test', sw: 'Inagharamia kipimo 1 cha uchunguzi' } },
@@ -21,6 +20,7 @@ export default function DonateTab({ t }) {
   const { user } = useAuth();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
+  const [donorName, setDonorName] = useState(user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -39,7 +39,13 @@ export default function DonateTab({ t }) {
     setError('');
     setBusy(true);
     try {
-      await client.post('/donations/', { amount_kes: finalAmount, is_anonymous: isAnonymous });
+      await client.post('/donations/', {
+        amount_kes: finalAmount,
+        is_anonymous: isAnonymous,
+        // Only meaningful for a guest (not signed in) donation; the backend
+        // uses the account's own name for a signed-in donor regardless.
+        donor_name: user ? '' : donorName,
+      });
       setSubmitted(true);
       client.get('/donations/leaderboard/').then((res) => setLeaderboard(res.data)).catch(() => {});
     } catch {
@@ -90,8 +96,8 @@ export default function DonateTab({ t }) {
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {t(
-                'This is a demonstration donation flow, not a live payment integration yet. Sign in to donate; the anonymous toggle below hides your name from the public leaderboard, not from your own account.',
-                'Hii ni onyesho la mchango, si muunganisho halisi wa malipo bado. Ingia ili kuchangia; kitufe cha kutokujulikana chini kinafisha jina lako kwenye orodha ya umma, si kwenye akaunti yako.'
+                'This is a demonstration donation flow, not a live payment integration yet. No account is required to give.',
+                'Hii ni onyesho la mchango, si muunganisho halisi wa malipo bado. Hakuna akaunti inayohitajika kuchangia.'
               )}
             </p>
           </div>
@@ -134,60 +140,62 @@ export default function DonateTab({ t }) {
               </div>
             </div>
 
-            {user ? (
-              <>
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    {isAnonymous ? <EyeOff size={16} className="text-muted-foreground shrink-0" /> : <Eye size={16} className="text-muted-foreground shrink-0" />}
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{t('Donate Anonymously', 'Changia bila Kujulikana')}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {isAnonymous
-                          ? t('Your name will be hidden from the public leaderboard.', 'Jina lako litafichwa kwenye orodha ya umma.')
-                          : t('Your name will be visible on the public leaderboard.', 'Jina lako litaonekana kwenye orodha ya umma.')}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={isAnonymous}
-                    onClick={() => setIsAnonymous((v) => !v)}
-                    className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${isAnonymous ? 'bg-primary' : 'bg-border'}`}
-                  >
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isAnonymous ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-                {isAnonymous && (
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blush border border-border">
-                    <Shield size={14} className="text-primary mt-0.5 shrink-0" />
-                    <p className="text-xs text-foreground leading-relaxed">
-                      {t(
-                        'Anonymous donation active. Your identity will be completely hidden from the public leaderboard, shown as "Anonymous Supporter" instead.',
-                        'Mchango bila kujulikana umewezeshwa. Utambulisho wako utafichwa kabisa kwenye orodha ya umma, utaonekana kama "Mchangiaji Asiyejulikana".'
-                      )}
-                    </p>
-                  </div>
-                )}
-
-                <button type="submit" disabled={!finalAmount || finalAmount < 100 || busy} className="btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-                  {finalAmount
-                    ? `${t('Donate', 'Changia')} KES ${finalAmount.toLocaleString()}`
-                    : t('Select an amount to continue', 'Chagua kiasi kuendelea')}
-                  <Heart size={15} />
-                </button>
-              </>
-            ) : (
-              <SignInGate
-                t={t}
-                title={t('Sign in to Donate', 'Ingia ili Kuchangia')}
-                body={t(
-                  'Sign in or create an account to complete a donation. This also lets you choose to appear anonymously on the leaderboard.',
-                  'Ingia au fungua akaunti ili kukamilisha mchango. Hii pia inakuwezesha kuchagua kutojulikana kwenye orodha.'
-                )}
-              />
+            {!user && !isAnonymous && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  {t('Your Name (for leaderboard)', 'Jina Lako (kwa orodha)')} <span className="text-muted-foreground font-normal">({t('optional', 'hiari')})</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder={t('Enter your name', 'Ingiza jina lako')}
+                  className="input-field"
+                  value={donorName}
+                  onChange={(e) => setDonorName(e.target.value)}
+                />
+              </div>
             )}
+
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/50">
+              <div className="flex items-center gap-3">
+                {isAnonymous ? <EyeOff size={16} className="text-muted-foreground shrink-0" /> : <Eye size={16} className="text-muted-foreground shrink-0" />}
+                <div>
+                  <p className="text-sm font-medium text-foreground">{t('Donate Anonymously', 'Changia bila Kujulikana')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isAnonymous
+                      ? t('Your name will be hidden from the public leaderboard.', 'Jina lako litafichwa kwenye orodha ya umma.')
+                      : t('Your name will be visible on the public leaderboard.', 'Jina lako litaonekana kwenye orodha ya umma.')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isAnonymous}
+                onClick={() => setIsAnonymous((v) => !v)}
+                className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${isAnonymous ? 'bg-primary' : 'bg-border'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${isAnonymous ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            {isAnonymous && (
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blush border border-border">
+                <Shield size={14} className="text-primary mt-0.5 shrink-0" />
+                <p className="text-xs text-foreground leading-relaxed">
+                  {t(
+                    'Anonymous donation active. Your identity will be completely hidden from the public leaderboard, shown as "Anonymous Supporter" instead.',
+                    'Mchango bila kujulikana umewezeshwa. Utambulisho wako utafichwa kabisa kwenye orodha ya umma, utaonekana kama "Mchangiaji Asiyejulikana".'
+                  )}
+                </p>
+              </div>
+            )}
+
+            <button type="submit" disabled={!finalAmount || finalAmount < 100 || busy} className="btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+              {finalAmount
+                ? `${t('Donate', 'Changia')} KES ${finalAmount.toLocaleString()}`
+                : t('Select an amount to continue', 'Chagua kiasi kuendelea')}
+              <Heart size={15} />
+            </button>
           </form>
 
           <div className="mt-6 card-base p-5">

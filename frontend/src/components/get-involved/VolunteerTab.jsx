@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Users, ArrowRight, X, CheckCircle2, Clock, Zap, Award, Star, Medal, Heart, Trophy, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, ArrowRight, X, CheckCircle2, Clock, Zap, Award, Star, Medal, Heart, Trophy, Upload, FileCheck } from 'lucide-react';
 import client from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
-import SignInGate from './SignInGate';
 import { VOLUNTEER_ROLES, AVAILABILITY_OPTIONS, STATUS_LABEL, STATUS_PIPELINE } from './roles';
 
 const STATUS_STYLE = {
@@ -13,6 +13,15 @@ const STATUS_STYLE = {
   REJECTED: 'text-muted-foreground bg-muted border-border',
 };
 const STATUS_ICON = { PENDING: Clock, APPROVED: CheckCircle2, ACTIVE: Zap, COMPLETED: Award, REJECTED: X };
+
+// Shared by the public "What You'll Earn" preview and the signed-in tracker,
+// so the two never drift out of sync with each other.
+const BADGE_DEFS = [
+  { id: 'first-step', icon: Star, name: { en: 'First Step', sw: 'Hatua ya Kwanza' }, desc: { en: 'Submit your first application', sw: 'Wasilisha ombi lako la kwanza' }, earned: (apps) => apps.length >= 1 },
+  { id: 'community-champion', icon: Medal, name: { en: 'Community Champion', sw: 'Bingwa wa Jamii' }, desc: { en: 'Apply for 3 or more roles', sw: 'Omba nafasi 3 au zaidi' }, earned: (apps) => apps.length >= 3 },
+  { id: 'health-advocate', icon: Heart, name: { en: 'Health Advocate', sw: 'Mtetezi wa Afya' }, desc: { en: 'Be active in a medical support role', sw: 'Fanya kazi katika nafasi ya kimatibabu' }, earned: (apps) => apps.some((a) => a.category === 'MEDICAL' && ['ACTIVE', 'COMPLETED'].includes(a.status)) },
+  { id: 'active-volunteer', icon: Trophy, name: { en: 'Active Volunteer', sw: 'Mjitoleaji Anayefanya Kazi' }, desc: { en: 'Get approved into an active role', sw: 'Idhinishwe kwa nafasi inayofanya kazi' }, earned: (apps) => apps.some((a) => ['ACTIVE', 'COMPLETED'].includes(a.status)) },
+];
 
 function openCertificate(application, t) {
   const win = window.open('', '_blank');
@@ -60,11 +69,49 @@ function RoleCard({ role, t, onApply }) {
   );
 }
 
+// Public, always-visible preview of what volunteering earns you: real
+// mechanisms (badges computed from your own activity, a real printable
+// certificate), described before you've signed in, not shown as already
+// earned by anyone.
+function EarnPreview({ t }) {
+  return (
+    <div className="card-base p-6">
+      <h3 className="font-heading font-semibold text-foreground mb-1">{t('What You Can Earn', 'Unachoweza Kupata')}</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        {t('Badges and a certificate, based on your own real volunteering activity.', 'Beji na cheti, kulingana na shughuli zako halisi za kujitolea.')}
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {BADGE_DEFS.map((badge) => {
+          const BadgeIcon = badge.icon;
+          return (
+            <div key={badge.id} className="flex flex-col items-center text-center gap-2">
+              <div className="w-11 h-11 rounded-full bg-accent flex items-center justify-center">
+                <BadgeIcon size={18} className="text-primary" />
+              </div>
+              <p className="font-semibold text-xs text-foreground">{t(badge.name.en, badge.name.sw)}</p>
+              <p className="text-xs text-muted-foreground leading-tight">{t(badge.desc.en, badge.desc.sw)}</p>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 pt-4 border-t border-border flex items-start gap-2.5">
+        <FileCheck size={15} className="text-primary shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {t(
+            'Once a role is marked complete, a printable certificate with your name, role, and date becomes available.',
+            'Nafasi ikishakamilika, cheti kinachoweza kuchapishwa chenye jina lako, nafasi, na tarehe kinapatikana.'
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ApplyModal({ role, t, user, onClose, onSubmitted }) {
   const [form, setForm] = useState({
-    full_name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '',
-    phone: user?.phone_number || '',
-    county: user?.county || '',
+    full_name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+    phone: user.phone_number || '',
+    county: user.county || '',
     availability: '',
     skills: '',
     motivation: '',
@@ -115,66 +162,55 @@ function ApplyModal({ role, t, user, onClose, onSubmitted }) {
           </button>
         </div>
 
-        {!user ? (
-          <SignInGate
-            t={t}
-            title={t('Sign in to Apply', 'Ingia ili Kuomba')}
-            body={t(
-              'Create an account or sign in to apply for volunteer roles, track your application status, and earn recognition for your service.',
-              'Fungua akaunti au ingia ili kuomba nafasi za kujitolea, kufuatilia hali ya maombi yako, na kupata utambuzi wa huduma yako.'
-            )}
-          />
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error && <div className="error-box">{error}</div>}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">{t('Full Name', 'Jina Kamili')}</label>
-                <input type="text" className="input-field" required value={form.full_name} onChange={(e) => set('full_name', e.target.value)} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">{t('Phone Number', 'Nambari ya Simu')}</label>
-                <input type="tel" className="input-field" required value={form.phone} onChange={(e) => set('phone', e.target.value)} />
-              </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {error && <div className="error-box">{error}</div>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{t('Full Name', 'Jina Kamili')}</label>
+              <input type="text" className="input-field" required value={form.full_name} onChange={(e) => set('full_name', e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">{t('County', 'Kaunti')}</label>
-              <input type="text" className="input-field" required value={form.county} onChange={(e) => set('county', e.target.value)} />
+              <label className="block text-sm font-medium text-foreground mb-1.5">{t('Phone Number', 'Nambari ya Simu')}</label>
+              <input type="tel" className="input-field" required value={form.phone} onChange={(e) => set('phone', e.target.value)} />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">{t('County', 'Kaunti')}</label>
+            <input type="text" className="input-field" required value={form.county} onChange={(e) => set('county', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">{t('Availability', 'Upatikanaji')}</label>
+            <select className="input-field" required value={form.availability} onChange={(e) => set('availability', e.target.value)}>
+              <option value="">{t('Select availability', 'Chagua upatikanaji')}</option>
+              {AVAILABILITY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{t(opt.en, opt.sw)}</option>
+              ))}
+            </select>
+          </div>
+          {role.category === 'MEDICAL' && (
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">{t('Availability', 'Upatikanaji')}</label>
-              <select className="input-field" required value={form.availability} onChange={(e) => set('availability', e.target.value)}>
-                <option value="">{t('Select availability', 'Chagua upatikanaji')}</option>
-                {AVAILABILITY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{t(opt.en, opt.sw)}</option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                {t('Professional Credentials (optional)', 'Vyeti vya Kitaalamu (hiari)')}
+              </label>
+              <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-border text-sm text-muted-foreground cursor-pointer hover:border-primary transition-colors">
+                <Upload size={15} />
+                {form.credentials_file ? form.credentials_file.name : t('Upload a file (e.g. KMPDC license)', 'Pakia faili (mfano leseni ya KMPDC)')}
+                <input type="file" className="hidden" onChange={(e) => set('credentials_file', e.target.files?.[0] || null)} />
+              </label>
             </div>
-            {role.category === 'MEDICAL' && (
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  {t('Professional Credentials (optional)', 'Vyeti vya Kitaalamu (hiari)')}
-                </label>
-                <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-border text-sm text-muted-foreground cursor-pointer hover:border-primary transition-colors">
-                  <Upload size={15} />
-                  {form.credentials_file ? form.credentials_file.name : t('Upload a file (e.g. KMPDC license)', 'Pakia faili (mfano leseni ya KMPDC)')}
-                  <input type="file" className="hidden" onChange={(e) => set('credentials_file', e.target.files?.[0] || null)} />
-                </label>
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">{t('Relevant Skills or Experience (optional)', 'Ujuzi au Uzoefu (hiari)')}</label>
-              <textarea className="input-field resize-none" rows={2} value={form.skills} onChange={(e) => set('skills', e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">{t('Why do you want to volunteer?', 'Kwa nini unataka kujitolea?')}</label>
-              <textarea className="input-field resize-none" rows={3} required value={form.motivation} onChange={(e) => set('motivation', e.target.value)} />
-            </div>
-            <button type="submit" disabled={busy} className="btn-primary justify-center">
-              {busy ? t('Submitting...', 'Inawasilisha...') : t('Submit Application', 'Wasilisha Ombi')} <ArrowRight size={15} />
-            </button>
-          </form>
-        )}
+          )}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">{t('Relevant Skills or Experience (optional)', 'Ujuzi au Uzoefu (hiari)')}</label>
+            <textarea className="input-field resize-none" rows={2} value={form.skills} onChange={(e) => set('skills', e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">{t('Why do you want to volunteer?', 'Kwa nini unataka kujitolea?')}</label>
+            <textarea className="input-field resize-none" rows={3} required value={form.motivation} onChange={(e) => set('motivation', e.target.value)} />
+          </div>
+          <button type="submit" disabled={busy} className="btn-primary justify-center">
+            {busy ? t('Submitting...', 'Inawasilisha...') : t('Submit Application', 'Wasilisha Ombi')} <ArrowRight size={15} />
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -182,6 +218,7 @@ function ApplyModal({ role, t, user, onClose, onSubmitted }) {
 
 export default function VolunteerTab({ t }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ volunteer_count: 0, county_count: 0 });
   const [selectedCategory, setSelectedCategory] = useState('MEDICAL');
   const [applyingRole, setApplyingRole] = useState(null);
@@ -205,35 +242,50 @@ export default function VolunteerTab({ t }) {
     loadApplications();
   }
 
-  const roles = VOLUNTEER_ROLES.filter((r) => r.category === selectedCategory);
+  // The CTA and every "Apply" button send a signed-out visitor straight to
+  // the sign-in page (with a return path) rather than popping a modal that
+  // just shows a sign-in prompt inside it.
+  function requireAuthThen(action) {
+    if (!user) {
+      navigate('/auth', { state: { from: '/get-involved' } });
+      return;
+    }
+    action();
+  }
 
-  const badges = [
-    { id: 'first-step', icon: Star, earned: applications.length >= 1, name: t('First Step', 'Hatua ya Kwanza'), desc: t('Submitted your first application', 'Umewasilisha ombi lako la kwanza') },
-    { id: 'community-champion', icon: Medal, earned: applications.length >= 3, name: t('Community Champion', 'Bingwa wa Jamii'), desc: t('Applied for 3 or more roles', 'Umeomba nafasi 3 au zaidi') },
-    { id: 'health-advocate', icon: Heart, earned: applications.some((a) => a.category === 'MEDICAL' && ['ACTIVE', 'COMPLETED'].includes(a.status)), name: t('Health Advocate', 'Mtetezi wa Afya'), desc: t('Active in a medical support role', 'Unafanya kazi katika nafasi ya kimatibabu') },
-    { id: 'active-volunteer', icon: Trophy, earned: applications.some((a) => ['ACTIVE', 'COMPLETED'].includes(a.status)), name: t('Active Volunteer', 'Mjitoleaji Anayefanya Kazi'), desc: t('Approved into an active role', 'Umeidhinishwa kwa nafasi inayofanya kazi') },
-  ];
+  const roles = VOLUNTEER_ROLES.filter((r) => r.category === selectedCategory);
+  const badges = BADGE_DEFS.map((b) => ({ ...b, earned: b.earned(applications) }));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="card-base p-6">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center shrink-0">
-            <Users size={20} className="text-primary" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-start gap-4 flex-1">
+            <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center shrink-0">
+              <Users size={20} className="text-primary" />
+            </div>
+            <div>
+              <h2 className="font-heading font-bold text-lg text-foreground mb-1">
+                {t('Volunteer with CerviBloom', 'Jitolee na CerviBloom')}
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {t(
+                  `${stats.volunteer_count} volunteer${stats.volunteer_count === 1 ? '' : 's'} engaged across ${stats.county_count} count${stats.county_count === 1 ? 'y' : 'ies'} so far. Join our network helping raise cervical cancer awareness across Kenya.`,
+                  `Wajitoleaji ${stats.volunteer_count} wameshiriki katika kaunti ${stats.county_count} hadi sasa. Jiunge na mtandao wetu wa kuhamasisha kuhusu saratani ya mlango wa kizazi Kenya nzima.`
+                )}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-heading font-bold text-lg text-foreground mb-1">
-              {t('Volunteer with CerviBloom', 'Jitolee na CerviBloom')}
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {t(
-                `${stats.volunteer_count} volunteer${stats.volunteer_count === 1 ? '' : 's'} engaged across ${stats.county_count} count${stats.county_count === 1 ? 'y' : 'ies'} so far. Join our network helping raise cervical cancer awareness across Kenya.`,
-                `Wajitoleaji ${stats.volunteer_count} wameshiriki katika kaunti ${stats.county_count} hadi sasa. Jiunge na mtandao wetu wa kuhamasisha kuhusu saratani ya mlango wa kizazi Kenya nzima.`
-              )}
-            </p>
-          </div>
+          <button
+            onClick={() => requireAuthThen(() => document.getElementById('volunteer-roles')?.scrollIntoView({ behavior: 'smooth' }))}
+            className="btn-primary text-sm justify-center shrink-0 w-full sm:w-auto"
+          >
+            {t('Volunteer Today', 'Jitolee Leo')} <ArrowRight size={15} />
+          </button>
         </div>
       </div>
+
+      <EarnPreview t={t} />
 
       {user && (
         <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
@@ -264,7 +316,7 @@ export default function VolunteerTab({ t }) {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div id="volunteer-roles" className="flex gap-2">
             {[
               { id: 'MEDICAL', label: t('Clinical & Medical', 'Kimatibabu') },
               { id: 'NON_MEDICAL', label: t('Community & Outreach', 'Jamii na Uhamasishaji') },
@@ -281,7 +333,7 @@ export default function VolunteerTab({ t }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {roles.map((role) => (
-              <RoleCard key={role.id} role={role} t={t} onApply={setApplyingRole} />
+              <RoleCard key={role.id} role={role} t={t} onApply={(r) => requireAuthThen(() => setApplyingRole(r))} />
             ))}
           </div>
         </>
@@ -348,8 +400,8 @@ export default function VolunteerTab({ t }) {
                     <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mx-auto mb-2">
                       <BadgeIcon size={20} className="text-primary" />
                     </div>
-                    <p className="font-semibold text-xs text-foreground mb-0.5">{badge.name}</p>
-                    <p className="text-xs text-muted-foreground leading-tight">{badge.desc}</p>
+                    <p className="font-semibold text-xs text-foreground mb-0.5">{t(badge.name.en, badge.name.sw)}</p>
+                    <p className="text-xs text-muted-foreground leading-tight">{t(badge.desc.en, badge.desc.sw)}</p>
                     {!badge.earned && <p className="text-xs text-muted-foreground mt-1 font-medium">{t('Locked', 'Imefungwa')}</p>}
                   </div>
                 );
@@ -359,7 +411,7 @@ export default function VolunteerTab({ t }) {
         </div>
       )}
 
-      {applyingRole && (
+      {applyingRole && user && (
         <ApplyModal role={applyingRole} t={t} user={user} onClose={() => setApplyingRole(null)} onSubmitted={handleSubmitted} />
       )}
     </div>

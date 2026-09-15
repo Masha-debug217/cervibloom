@@ -315,9 +315,17 @@ class VolunteerApplicationViewSet(viewsets.ModelViewSet):
 
 
 class DonationRecordViewSet(viewsets.ModelViewSet):
-    """Simulated donations - donor can create/view their own; admin sees all."""
+    """
+    Simulated donations. Donating does not require an account (like
+    contributing to a real Kenyan fundraiser on M-Changa doesn't require the
+    contributor to have one) - only listing your own history does.
+    """
     serializer_class = DonationRecordSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ('create', 'leaderboard'):
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
@@ -326,7 +334,8 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
         return DonationRecord.objects.filter(donor=user)
 
     def perform_create(self, serializer):
-        serializer.save(donor=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(donor=user)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def leaderboard(self, request):

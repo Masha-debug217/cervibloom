@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -10,6 +10,7 @@ function destinationFor(role) {
 export default function SignInForm({ t, onSwitchToSignUp }) {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -27,7 +28,7 @@ export default function SignInForm({ t, onSwitchToSignUp }) {
     setIsLoading(true);
     try {
       const u = await login(form.username, form.password);
-      navigate(destinationFor(u?.role));
+      navigate(location.state?.from || destinationFor(u?.role));
     } catch {
       setAuthError(t('Incorrect username or password.', 'Jina la mtumiaji au nenosiri si sahihi.'));
     } finally {

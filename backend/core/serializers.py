@@ -58,19 +58,23 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
 
 
 class DonationRecordSerializer(serializers.ModelSerializer):
-    # None when is_anonymous - the frontend shows "Anonymous Supporter"
-    # instead, so the donor's identity never has to reach the client at all.
+    # None when is_anonymous (or when a guest donor left no name) - the
+    # frontend shows "Anonymous Supporter" instead, so an anonymous donor's
+    # identity never has to reach the client at all.
     donor_display = serializers.SerializerMethodField()
+    amount_kes = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=100)
 
     class Meta:
         model = DonationRecord
-        fields = ['id', 'amount_kes', 'is_anonymous', 'created_at', 'donor_display']
+        fields = ['id', 'amount_kes', 'is_anonymous', 'donor_name', 'created_at', 'donor_display']
 
     def get_donor_display(self, obj):
         if obj.is_anonymous:
             return None
-        name = f"{obj.donor.first_name} {obj.donor.last_name}".strip()
-        return name or obj.donor.username
+        if obj.donor:
+            name = f"{obj.donor.first_name} {obj.donor.last_name}".strip()
+            return name or obj.donor.username
+        return obj.donor_name or None
 
 
 class FAQItemSerializer(serializers.ModelSerializer):

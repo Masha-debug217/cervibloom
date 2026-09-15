@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Loader2, Check, Shield, Heart, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { KENYAN_COUNTIES } from '../../constants/counties';
@@ -27,6 +27,7 @@ const strengthText = { 1: 'text-red-600', 2: 'text-yellow-600', 3: 'text-yellow-
 export default function SignUpForm({ t, language, setLanguage, onSwitchToSignIn }) {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -113,7 +114,7 @@ export default function SignUpForm({ t, language, setLanguage, onSwitchToSignIn 
   }
 
   function goToDashboard() {
-    navigate(destinationFor('USER'));
+    navigate(location.state?.from || destinationFor('USER'));
   }
 
   const stepLabels = t(['Personal Details', 'Security & Consent', 'Health Profile'], ['Maelezo Binafsi', 'Usalama na Idhini', 'Wasifu wa Afya']);
@@ -152,7 +153,9 @@ export default function SignUpForm({ t, language, setLanguage, onSwitchToSignIn 
         </div>
 
         <button type="button" onClick={goToDashboard} className="btn-primary w-full py-3 text-sm">
-          {t('Go to my Dashboard', 'Nenda kwenye Dashibodi yangu')}
+          {location.state?.from
+            ? t('Continue', 'Endelea')
+            : t('Go to my Dashboard', 'Nenda kwenye Dashibodi yangu')}
           <ArrowRight size={16} />
         </button>
       </div>
