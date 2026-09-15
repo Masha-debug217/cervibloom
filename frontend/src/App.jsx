@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Link, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, NavLink, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Globe, Moon, Sun, Menu, X, Mail, Phone, MapPin } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
@@ -196,28 +196,41 @@ function Footer() {
   );
 }
 
+// The normal site chrome (sticky nav + footer). /auth deliberately opts out
+// of this: it's a full-screen standalone layout with its own minimal header,
+// not a page nested inside the rest of the site.
+function SiteLayout() {
+  return (
+    <>
+      <Nav />
+      <Outlet />
+      <Footer />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
         <BrowserRouter>
-          <Nav />
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/info-hub" element={<InfoHub />} />
-            <Route path="/articles" element={<Articles />} />
-            <Route path="/blog" element={<SurvivorBlog />} />
-            <Route path="/directory" element={<Directory />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/volunteer" element={<ProtectedRoute><VolunteerDonate /></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
+            <Route element={<SiteLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/info-hub" element={<InfoHub />} />
+              <Route path="/articles" element={<Articles />} />
+              <Route path="/blog" element={<SurvivorBlog />} />
+              <Route path="/directory" element={<Directory />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/volunteer" element={<ProtectedRoute><VolunteerDonate /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+            </Route>
           </Routes>
-          <Footer />
         </BrowserRouter>
       </LanguageProvider>
     </AuthProvider>

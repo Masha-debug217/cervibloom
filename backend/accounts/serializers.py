@@ -15,7 +15,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'first_name', 'phone_number', 'county']
+        fields = [
+            'id', 'username', 'email', 'password', 'first_name', 'last_name',
+            'phone_number', 'county', 'date_of_birth', 'last_screening_year',
+            'hpv_vaccine_doses', 'preferred_language',
+        ]
 
     def create(self, validated_data):
         # create_user() hashes the password properly - never save raw passwords
@@ -26,4 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
     """Used to return the logged-in user's own profile info (no password)."""
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'first_name', 'phone_number', 'county']
+        fields = [
+            'id', 'username', 'email', 'role', 'first_name', 'last_name',
+            'phone_number', 'county', 'date_of_birth', 'last_screening_year',
+            'hpv_vaccine_doses', 'preferred_language',
+        ]
