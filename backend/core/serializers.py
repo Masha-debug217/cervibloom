@@ -5,7 +5,7 @@ from rest_framework import serializers
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
-    Article, BlogPost,
+    Article, BlogPost, Event,
 )
 
 User = get_user_model()
@@ -123,3 +123,26 @@ class BlogPostSerializer(serializers.ModelSerializer):
         model = BlogPost
         fields = ['id', 'title', 'body', 'status', 'created_at', 'author_username']
         read_only_fields = ['status']
+
+
+class EventSerializer(serializers.ModelSerializer):
+    rsvp_count = serializers.SerializerMethodField()
+    is_rsvped = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'title', 'title_sw', 'description', 'description_sw',
+            'location', 'county', 'start_date', 'end_date',
+            'volunteer_role_ids', 'rsvp_count', 'is_rsvped', 'created_at',
+        ]
+
+    def get_rsvp_count(self, obj):
+        return obj.rsvps.count()
+
+    def get_is_rsvped(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        return obj.rsvps.filter(user=user).exists()

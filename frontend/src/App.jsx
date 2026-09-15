@@ -10,6 +10,7 @@ import SurvivorBlog from './pages/SurvivorBlog';
 import Directory from './pages/Directory';
 import Dashboard from './pages/Dashboard';
 import GetInvolved from './pages/GetInvolved';
+import Events from './pages/Events';
 import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import About from './pages/About';
@@ -62,6 +63,7 @@ function Nav() {
     { to: '/info-hub', label: t('nav_infohub') },
     { to: '/directory', label: t('nav_directory') },
     { to: '/about', label: t('nav_about') },
+    { to: '/events', label: t('nav_events') },
     { to: '/get-involved', label: t('nav_get_involved') },
     ...(role === 'USER' ? [{ to: '/dashboard', label: t('nav_dashboard') }] : []),
     ...(role === 'ADMIN' ? [{ to: '/admin', label: t('nav_admin') }] : []),
@@ -170,6 +172,7 @@ function Footer() {
           <Link to="/">{t('nav_home')}</Link>
           <Link to="/info-hub">{t('nav_infohub')}</Link>
           <Link to="/directory">{t('nav_directory')}</Link>
+          <Link to="/events">{t('nav_events')}</Link>
           <Link to="/articles">{t('nav_articles')}</Link>
           <Link to="/blog">{t('nav_blog')}</Link>
         </div>
@@ -224,6 +227,7 @@ export default function App() {
               <Route path="/directory" element={<Directory />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/get-involved" element={<GetInvolved />} />
+              <Route path="/events" element={<Events />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />

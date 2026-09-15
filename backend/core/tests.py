@@ -2,8 +2,10 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from django.utils import timezone
+
 from core import symptom_navigator
-from core.models import SymptomLog, Article, BlogPost
+from core.models import SymptomLog, Article, BlogPost, Event
 
 User = get_user_model()
 
@@ -240,3 +242,50 @@ class BlogPostTests(APITestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['title'], 'Updated title')
+
+
+class EventRSVPTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('rsvp_u', 'rsvp_u@e.com', 'testpass123')
+        self.admin = User.objects.create_user('rsvp_adm', 'rsvp_adm@e.com', 'testpass123', role='ADMIN')
+        self.event = Event.objects.create(
+            title='Community Screening Day',
+            description='A free screening event.',
+            location='Kenyatta National Hospital, Nairobi',
+            county='Nairobi',
+            start_date=timezone.now() + timezone.timedelta(days=7),
+        )
+
+    def test_anyone_can_list_events_without_signing_in(self):
+        resp = self.client.get('/api/events/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
+
+    def test_only_admin_can_create_an_event(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.post('/api/events/', {
+            'title': 'Unauthorized Event', 'description': 'x',
+            'location': 'Somewhere', 'start_date': timezone.now(),
+        }, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_rsvp_requires_sign_in(self):
+        resp = self.client.post(f'/api/events/{self.event.id}/toggle_rsvp/')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_toggle_rsvp_creates_then_removes(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.post(f'/api/events/{self.event.id}/toggle_rsvp/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.data['is_rsvped'])
+        self.assertEqual(resp.data['rsvp_count'], 1)
+
+        resp = self.client.post(f'/api/events/{self.event.id}/toggle_rsvp/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertFalse(resp.data['is_rsvped'])
+        self.assertEqual(resp.data['rsvp_count'], 0)
+
+    def test_admin_cannot_rsvp(self):
+        self.client.force_authenticate(self.admin)
+        resp = self.client.post(f'/api/events/{self.event.id}/toggle_rsvp/')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)

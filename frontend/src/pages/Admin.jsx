@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import client from '../api/client';
+import { VOLUNTEER_ROLES } from '../components/get-involved/roles';
 
 /*
  * Minimal admin console. Intentionally plain: functional CRUD tables that
@@ -525,6 +526,125 @@ function ArticlesTab() {
   );
 }
 
+/* --------------------------------- Events --------------------------------- */
+
+const BLANK_EVENT = {
+  title: '', title_sw: '', description: '', description_sw: '',
+  location: '', county: '', start_date: '', end_date: '', volunteer_role_ids: [],
+};
+
+function EventsTab() {
+  const [rows, setRows] = useState([]);
+  const [form, setForm] = useState(BLANK_EVENT);
+  const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    client.get('/events/').then((r) => setRows(r.data)).catch(() => setError('Could not load events.'));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  function startEdit(ev) {
+    setEditingId(ev.id);
+    setForm({
+      title: ev.title, title_sw: ev.title_sw ?? '',
+      description: ev.description, description_sw: ev.description_sw ?? '',
+      location: ev.location, county: ev.county ?? '',
+      start_date: ev.start_date ? ev.start_date.slice(0, 16) : '',
+      end_date: ev.end_date ? ev.end_date.slice(0, 16) : '',
+      volunteer_role_ids: ev.volunteer_role_ids ?? [],
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function resetForm() { setEditingId(null); setForm(BLANK_EVENT); }
+
+  function toggleRole(id) {
+    setForm((prev) => ({
+      ...prev,
+      volunteer_role_ids: prev.volunteer_role_ids.includes(id)
+        ? prev.volunteer_role_ids.filter((r) => r !== id)
+        : [...prev.volunteer_role_ids, id],
+    }));
+  }
+
+  async function save(e) {
+    e.preventDefault();
+    setError(''); setBusy(true);
+    const payload = { ...form, end_date: form.end_date || null };
+    try {
+      if (editingId) await client.put(`/events/${editingId}/`, payload);
+      else await client.post('/events/', payload);
+      resetForm(); load();
+    } catch (err) {
+      setError(err.response?.data ? JSON.stringify(err.response.data) : 'Save failed.');
+    } finally { setBusy(false); }
+  }
+
+  async function remove(id) {
+    if (!window.confirm('Delete this event?')) return;
+    try { await client.delete(`/events/${id}/`); load(); }
+    catch { setError('Delete failed.'); }
+  }
+
+  return (
+    <div className="panel">
+      <h3>{editingId ? 'Edit event' : 'Add event'}</h3>
+      {error && <div className="error-box">{error}</div>}
+      <form onSubmit={save} style={{ marginBottom: 18 }}>
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+        <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={4} placeholder="Description" required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <input style={{ ...inputStyle, marginBottom: 8 }} placeholder="Title in Kiswahili (optional)" value={form.title_sw} onChange={(e) => setForm({ ...form, title_sw: e.target.value })} />
+        <textarea style={{ ...inputStyle, marginBottom: 8 }} rows={4} placeholder="Description in Kiswahili (optional)" value={form.description_sw} onChange={(e) => setForm({ ...form, description_sw: e.target.value })} />
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input style={inputStyle} placeholder="Location (e.g. Kenyatta National Hospital, Nairobi)" required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <input style={inputStyle} placeholder="County (optional)" value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>Start date/time</label>
+            <input style={inputStyle} type="datetime-local" required value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>End date/time (optional)</label>
+            <input style={inputStyle} type="datetime-local" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+          </div>
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ fontSize: 12.5, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Volunteer roles needed (optional)</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {VOLUNTEER_ROLES.map((role) => (
+              <label key={role.id} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input type="checkbox" checked={form.volunteer_role_ids.includes(role.id)} onChange={() => toggleRole(role.id)} />
+                {role.title.en}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" disabled={busy}>{editingId ? 'Save changes' : 'Add event'}</button>
+          {editingId && <button type="button" className="btn btn-outline" onClick={resetForm}>Cancel</button>}
+        </div>
+      </form>
+
+      <Table columns={['Title', 'When', 'Location', 'RSVPs', '']}>
+        {rows.map((ev) => (
+          <tr key={ev.id}>
+            <td style={{ ...cellStyle, maxWidth: 220 }}>{ev.title}</td>
+            <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>{new Date(ev.start_date).toLocaleString()}</td>
+            <td style={{ ...cellStyle, maxWidth: 200 }}>{ev.location}</td>
+            <td style={cellStyle}>{ev.rsvp_count}</td>
+            <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => startEdit(ev)}>Edit</button>{' '}
+              <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => remove(ev.id)}>Delete</button>
+            </td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
 /* --------------------------------- Page --------------------------------- */
 
 export default function Admin() {
@@ -543,6 +663,7 @@ export default function Admin() {
         <button className={tab === 'myths' ? 'active' : ''} onClick={() => setTab('myths')}>Myths</button>
         <button className={tab === 'articles' ? 'active' : ''} onClick={() => setTab('articles')}>Articles</button>
         <button className={tab === 'blog' ? 'active' : ''} onClick={() => setTab('blog')}>Blog</button>
+        <button className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>Events</button>
       </div>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {tab === 'facilities' && <FacilitiesTab />}
@@ -551,6 +672,7 @@ export default function Admin() {
         {tab === 'myths' && <MythsTab />}
         {tab === 'articles' && <ArticlesTab />}
         {tab === 'blog' && <BlogTab />}
+        {tab === 'events' && <EventsTab />}
       </div>
     </div>
   );

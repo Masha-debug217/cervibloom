@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     FacilityViewSet, FAQItemViewSet, SymptomLogViewSet,
     ScreeningReminderViewSet, VolunteerApplicationViewSet, DonationRecordViewSet,
-    MythFactViewSet, ArticleViewSet, BlogPostViewSet
+    MythFactViewSet, ArticleViewSet, BlogPostViewSet, EventViewSet
 )
 
 router = DefaultRouter()
@@ -15,5 +15,6 @@ router.register('symptom-logs', SymptomLogViewSet, basename='symptom-log')
 router.register('screening-reminders', ScreeningReminderViewSet, basename='screening-reminder')
 router.register('volunteer-applications', VolunteerApplicationViewSet, basename='volunteer-application')
 router.register('donations', DonationRecordViewSet, basename='donation')
+router.register('events', EventViewSet, basename='event')
 
 urlpatterns = router.urls

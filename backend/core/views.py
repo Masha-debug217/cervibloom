@@ -6,12 +6,13 @@ from rest_framework.response import Response
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
-    Article, ArticleBookmark, BlogPost,
+    Article, ArticleBookmark, BlogPost, Event, EventRSVP,
 )
 from .serializers import (
     FacilitySerializer, SymptomLogSerializer, ScreeningReminderSerializer,
     VolunteerApplicationSerializer, DonationRecordSerializer, FAQItemSerializer,
-    MythFactSerializer, ArticleSerializer, BlogPostSerializer
+    MythFactSerializer, ArticleSerializer, BlogPostSerializer,
+    EventSerializer,
 )
 from .permissions import IsAdminRole, IsAdminRoleOrReadOnly
 from . import symptom_navigator
@@ -346,3 +347,30 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
         """
         top = DonationRecord.objects.order_by('-amount_kes')[:10]
         return Response(self.get_serializer(top, many=True).data)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """Cervical cancer awareness events. Public read, ADMIN-only write - same as FAQs/myths/articles."""
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    permission_classes = [IsAdminRoleOrReadOnly]
+
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), 'request': self.request}
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def toggle_rsvp(self, request, pk=None):
+        """
+        POST /api/events/{id}/toggle_rsvp/
+        Same pattern as Article's toggle_bookmark: RSVPs the signed-in user
+        if they weren't already going, un-RSVPs them if they were.
+        """
+        if request.user.role == 'ADMIN':
+            raise PermissionDenied("Admin accounts cannot RSVP to events.")
+        event = self.get_object()
+        rsvp = EventRSVP.objects.filter(event=event, user=request.user).first()
+        if rsvp:
+            rsvp.delete()
+            return Response({'is_rsvped': False, 'rsvp_count': event.rsvps.count()})
+        EventRSVP.objects.create(event=event, user=request.user)
+        return Response({'is_rsvped': True, 'rsvp_count': event.rsvps.count()})

@@ -74,7 +74,11 @@ applications, plus badges computed live from a volunteer's own real
 application history (not pre-awarded to anyone).
 
 ### Events
-Showcasing cervical cancer events and booking, adding the voluntering to the event, 
+Done: admin-created events (`/events`), public listing with upcoming/past
+filter, sign-in-gated RSVP ("I'm Going"), and optional volunteer roles an
+event needs, shown as badges linking back to the real Get Involved
+application flow rather than a separate booking system. No events are
+seeded; an empty list says so honestly rather than showing invented ones.
 
 ### Screening Centers
 Done: built earlier as the Screening Directory (`/directory`), with

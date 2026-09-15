@@ -308,3 +308,49 @@ class MythFact(models.Model):
 
     def __str__(self):
         return self.myth
+
+
+class Event(models.Model):
+    """
+    An admin-created cervical cancer awareness event. Not seeded with any
+    placeholder events: an empty list means no real event exists yet, and
+    the frontend says so rather than showing invented ones.
+    """
+    title = models.CharField(max_length=200)
+    title_sw = models.CharField(
+        max_length=200, blank=True, help_text="Kiswahili translation. Optional; falls back to the English title."
+    )
+    description = models.TextField()
+    description_sw = models.TextField(
+        blank=True, help_text="Kiswahili translation. Optional; falls back to the English description."
+    )
+    location = models.CharField(max_length=200, help_text="e.g. 'Kenyatta National Hospital, Nairobi'.")
+    county = models.CharField(max_length=100, blank=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField(null=True, blank=True)
+    # Ids from the fixed volunteer role catalog (frontend/src/components/
+    # get-involved/roles.js) this event could use help with. Informational
+    # only - actually volunteering for a role still goes through the real
+    # Get Involved application flow, this just says which roles an event
+    # needs so a visitor knows what to apply for.
+    volunteer_role_ids = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['start_date']
+
+    def __str__(self):
+        return f"{self.title} ({self.start_date:%Y-%m-%d})"
+
+
+class EventRSVP(models.Model):
+    """A signed-in user's 'I'm going' for an Event."""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='rsvps')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='event_rsvps')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('event', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.event.title}"

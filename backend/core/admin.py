@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Facility, SymptomLog, ScreeningReminder,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
-    Article, ArticleBookmark, BlogPost
+    Article, ArticleBookmark, BlogPost, Event, EventRSVP
 )
 
 @admin.register(Facility)
@@ -37,7 +37,14 @@ class BlogPostAdmin(admin.ModelAdmin):
     list_display = ['title', 'author', 'status', 'created_at']
     list_filter = ['status']
 
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['title', 'start_date', 'county']
+    list_filter = ['county']
+    ordering = ['start_date']
+
 admin.site.register(SymptomLog)
 admin.site.register(ScreeningReminder)
 admin.site.register(DonationRecord)
 admin.site.register(ArticleBookmark)
+admin.site.register(EventRSVP)
