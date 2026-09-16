@@ -1,9 +1,11 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import (
     FacilityViewSet, FAQItemViewSet, SymptomLogViewSet,
     ScreeningReminderViewSet, AppointmentRequestViewSet,
     VolunteerApplicationViewSet, DonationRecordViewSet,
-    MythFactViewSet, ArticleViewSet, BlogPostViewSet, EventViewSet
+    MythFactViewSet, ArticleViewSet, BlogPostViewSet, EventViewSet,
+    NotificationsView, DismissNotificationView,
 )
 
 router = DefaultRouter()
@@ -19,4 +21,7 @@ router.register('volunteer-applications', VolunteerApplicationViewSet, basename=
 router.register('donations', DonationRecordViewSet, basename='donation')
 router.register('events', EventViewSet, basename='event')
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path('notifications/', NotificationsView.as_view(), name='notifications'),
+    path('notifications/dismiss/', DismissNotificationView.as_view(), name='notifications_dismiss'),
+]

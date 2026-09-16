@@ -10,6 +10,7 @@ import SurvivorBlog from './pages/SurvivorBlog';
 import Directory from './pages/Directory';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import NotificationBell from './components/layout/NotificationBell';
 import GetInvolved from './pages/GetInvolved';
 import Events from './pages/Events';
 import Admin from './pages/Admin';
@@ -105,6 +106,8 @@ function Nav() {
           >
             {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
+
+          {user && !mobileOpen && <NotificationBell />}
 
           {user && !mobileOpen && (
             <NavLink

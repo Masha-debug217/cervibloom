@@ -4,8 +4,13 @@ from rest_framework.test import APITestCase
 
 from django.utils import timezone
 
+from datetime import timedelta
+
 from core import symptom_navigator
-from core.models import SymptomLog, Article, BlogPost, Event, Facility, AppointmentRequest
+from core.models import (
+    SymptomLog, Article, BlogPost, Event, EventRSVP, Facility,
+    AppointmentRequest, ScreeningReminder, NotificationDismissal,
+)
 
 User = get_user_model()
 
@@ -347,3 +352,108 @@ class AppointmentRequestTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['status'], 'CONFIRMED')
         self.assertEqual(resp.data['admin_note'], 'Confirmed for 10am')
+
+
+class NotificationsTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('notif_u', 'notif_u@e.com', 'testpass123')
+        self.facility = Facility.objects.create(name='Test Hospital', county='Nairobi')
+
+    def test_requires_sign_in(self):
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_no_notifications_by_default(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data, [])
+
+    def test_pending_appointment_produces_no_notification(self):
+        AppointmentRequest.objects.create(patient=self.user, facility=self.facility, preferred_date='2026-11-01')
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.data, [])
+
+    def test_confirmed_appointment_produces_a_notification(self):
+        AppointmentRequest.objects.create(
+            patient=self.user, facility=self.facility, preferred_date='2026-11-01',
+            status=AppointmentRequest.Status.CONFIRMED, admin_note='Confirmed for 10am',
+        )
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['category'], 'APPOINTMENT')
+        self.assertEqual(resp.data[0]['body'], 'Confirmed for 10am')
+
+    def test_screening_reminder_due_within_30_days_produces_a_notification(self):
+        ScreeningReminder.objects.create(
+            patient=self.user, next_due_date=timezone.localdate() + timedelta(days=10),
+        )
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['category'], 'SCREENING')
+
+    def test_screening_reminder_far_in_future_produces_no_notification(self):
+        ScreeningReminder.objects.create(
+            patient=self.user, next_due_date=timezone.localdate() + timedelta(days=365),
+        )
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.data, [])
+
+    def test_rsvped_event_within_7_days_produces_a_notification(self):
+        event = Event.objects.create(
+            title='Nairobi Awareness Walk', description='desc',
+            location='Uhuru Park', start_date=timezone.now() + timedelta(days=3),
+        )
+        EventRSVP.objects.create(event=event, user=self.user)
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['category'], 'EVENT')
+
+    def test_rsvped_event_far_in_future_produces_no_notification(self):
+        event = Event.objects.create(
+            title='Future Event', description='desc',
+            location='Uhuru Park', start_date=timezone.now() + timedelta(days=30),
+        )
+        EventRSVP.objects.create(event=event, user=self.user)
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.data, [])
+
+    def test_one_hpv_dose_produces_a_nudge(self):
+        self.user.hpv_vaccine_doses = '1'
+        self.user.save()
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['category'], 'VACCINE')
+
+    def test_two_hpv_doses_produces_no_nudge(self):
+        self.user.hpv_vaccine_doses = '2'
+        self.user.save()
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.data, [])
+
+    def test_dismissing_a_notification_removes_it(self):
+        self.user.hpv_vaccine_doses = '1'
+        self.user.save()
+        self.client.force_authenticate(self.user)
+        resp = self.client.get('/api/notifications/')
+        key = resp.data[0]['key']
+
+        dismiss_resp = self.client.post('/api/notifications/dismiss/', {'key': key}, format='json')
+        self.assertEqual(dismiss_resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(NotificationDismissal.objects.filter(user=self.user, key=key).exists())
+
+        resp = self.client.get('/api/notifications/')
+        self.assertEqual(resp.data, [])
+
+    def test_dismiss_requires_a_key(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.post('/api/notifications/dismiss/', {}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

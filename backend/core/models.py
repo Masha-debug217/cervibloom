@@ -390,3 +390,24 @@ class EventRSVP(models.Model):
 
     def __str__(self):
         return f"{self.user.username} -> {self.event.title}"
+
+
+class NotificationDismissal(models.Model):
+    """
+    Notifications aren't their own stored feed: there's no email/SMS/push
+    infrastructure to deliver them, so `core.notifications.build_notifications`
+    computes the current, real list fresh on every request from data that
+    already exists (appointment status, upcoming RSVPs, a screening
+    reminder, self-reported vaccine doses). This model only remembers which
+    computed notification a user has dismissed, keyed by a stable id built
+    from its source record, so a dismissed one doesn't keep reappearing.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='dismissed_notifications')
+    key = models.CharField(max_length=100)
+    dismissed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'key')
+
+    def __str__(self):
+        return f"{self.user.username} dismissed {self.key}"

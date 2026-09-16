@@ -1,5 +1,5 @@
 from django.db.models import Q
-from rest_framework import viewsets, permissions, status as http_status
+from rest_framework import viewsets, generics, permissions, status as http_status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -7,6 +7,7 @@ from .models import (
     Facility, SymptomLog, ScreeningReminder, AppointmentRequest,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
     Article, ArticleBookmark, BlogPost, Event, EventRSVP,
+    NotificationDismissal,
 )
 from .serializers import (
     FacilitySerializer, SymptomLogSerializer, ScreeningReminderSerializer,
@@ -17,6 +18,7 @@ from .serializers import (
 )
 from .permissions import IsAdminRole, IsAdminRoleOrReadOnly
 from . import symptom_navigator
+from .notifications import build_notifications
 
 
 class FacilityViewSet(viewsets.ModelViewSet):
@@ -417,3 +419,33 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response({'is_rsvped': False, 'rsvp_count': event.rsvps.count()})
         EventRSVP.objects.create(event=event, user=request.user)
         return Response({'is_rsvped': True, 'rsvp_count': event.rsvps.count()})
+
+
+class NotificationsView(generics.GenericAPIView):
+    """
+    GET /api/notifications/
+    Returns the signed-in user's current notifications, computed live from
+    real data (see core/notifications.py) minus anything they've already
+    dismissed. Nothing here is "sent" anywhere - it only exists as long as
+    the underlying record does.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        dismissed_keys = set(
+            NotificationDismissal.objects.filter(user=request.user).values_list('key', flat=True)
+        )
+        items = [n for n in build_notifications(request.user) if n['key'] not in dismissed_keys]
+        return Response(items)
+
+
+class DismissNotificationView(generics.GenericAPIView):
+    """POST /api/notifications/dismiss/ {key} - stops that computed notification from reappearing."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        key = request.data.get('key')
+        if not key:
+            return Response({'key': ['This field is required.']}, status=http_status.HTTP_400_BAD_REQUEST)
+        NotificationDismissal.objects.get_or_create(user=request.user, key=key)
+        return Response(status=http_status.HTTP_204_NO_CONTENT)

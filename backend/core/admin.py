@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Facility, SymptomLog, ScreeningReminder, AppointmentRequest,
     VolunteerApplication, DonationRecord, FAQItem, MythFact,
-    Article, ArticleBookmark, BlogPost, Event, EventRSVP
+    Article, ArticleBookmark, BlogPost, Event, EventRSVP,
+    NotificationDismissal,
 )
 
 @admin.register(Facility)
@@ -53,3 +54,4 @@ admin.site.register(ScreeningReminder)
 admin.site.register(DonationRecord)
 admin.site.register(ArticleBookmark)
 admin.site.register(EventRSVP)
+admin.site.register(NotificationDismissal)

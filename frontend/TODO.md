@@ -123,7 +123,18 @@ HPV vaccine doses), and preferred language, plus change their password
 since they're not meant to change through self-service.
 
 ### Notifications (Feature)
-Notifications for screening appointments, dosage taking, vaccine follow ups, event dates.
+Done: added an in-app notification bell in the nav, not email/SMS/push,
+since none of that infrastructure exists (same reasoning as PayHero:
+those need a real provider account, not something to fabricate).
+Notifications are computed live every time the bell is opened, from data
+that already exists: an appointment request's status change (confirmed,
+declined, completed, with the admin's note), an admin-set screening
+reminder due within 30 days, an RSVPed event happening within 7 days, and
+a one-time nudge for anyone who self-reported exactly 1 HPV vaccine dose
+to get their second. Dismissing one persists (a small `NotificationDismissal`
+row) so it doesn't reappear. Nothing is invented: a user with no confirmed
+appointments, no admin-set reminder, no RSVPs, and 0 or 2+ vaccine doses
+simply sees "You're all caught up."
 
 ### Admin Dashboard
 Review volunteers, Donations overview, etc
