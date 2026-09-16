@@ -21,6 +21,113 @@ const inputStyle = {
   color: 'var(--text)', fontFamily: 'Inter', fontSize: 13,
 };
 
+/* --------------------------------- Overview -------------------------------- */
+
+const VOL_STATUS_ORDER = ['PENDING', 'APPROVED', 'ACTIVE', 'COMPLETED', 'REJECTED'];
+const VOL_STATUS_LABEL = { PENDING: 'Submitted', APPROVED: 'Approved', ACTIVE: 'Active', COMPLETED: 'Completed', REJECTED: 'Not selected' };
+const APPT_STATUS_ORDER = ['PENDING', 'CONFIRMED', 'DECLINED', 'COMPLETED'];
+const APPT_STATUS_LABEL = { PENDING: 'Pending', CONFIRMED: 'Confirmed', DECLINED: 'Declined', COMPLETED: 'Completed' };
+
+function StatCard({ label, value, sub }) {
+  return (
+    <div className="panel" style={{ padding: '18px 20px' }}>
+      <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+      <div style={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: 26, marginTop: 4 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function StatusBreakdown({ title, order, labels, counts }) {
+  const total = order.reduce((sum, k) => sum + (counts[k] || 0), 0);
+  return (
+    <div className="panel">
+      <h3>{title}</h3>
+      {total === 0 ? (
+        <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>No records yet.</p>
+      ) : (
+        order.map((key) => {
+          const count = counts[key] || 0;
+          const pct = total ? Math.round((count / total) * 100) : 0;
+          return (
+            <div key={key} style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                <span>{labels[key]}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{count}</span>
+              </div>
+              <div style={{ height: 6, borderRadius: 999, background: 'var(--surface-alt)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', borderRadius: 999 }} />
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+function OverviewTab() {
+  const [loading, setLoading] = useState(true);
+  const [volCounts, setVolCounts] = useState({});
+  const [apptCounts, setApptCounts] = useState({});
+  const [donationTotal, setDonationTotal] = useState(0);
+  const [donationCount, setDonationCount] = useState(0);
+  const [pendingStories, setPendingStories] = useState(0);
+  const [upcomingEvents, setUpcomingEvents] = useState(0);
+  const [facilityCount, setFacilityCount] = useState(0);
+
+  useEffect(() => {
+    Promise.all([
+      client.get('/volunteer-applications/'),
+      client.get('/donations/'),
+      client.get('/appointment-requests/'),
+      client.get('/blog-posts/'),
+      client.get('/events/'),
+      client.get('/facilities/'),
+    ]).then(([vol, don, appt, blog, events, facilities]) => {
+      const vc = {};
+      vol.data.forEach((v) => { vc[v.status] = (vc[v.status] || 0) + 1; });
+      setVolCounts(vc);
+
+      const ac = {};
+      appt.data.forEach((a) => { ac[a.status] = (ac[a.status] || 0) + 1; });
+      setApptCounts(ac);
+
+      setDonationTotal(don.data.reduce((sum, d) => sum + Number(d.amount_kes), 0));
+      setDonationCount(don.data.length);
+
+      setPendingStories(blog.data.filter((b) => b.status === 'PENDING').length);
+
+      const now = new Date();
+      setUpcomingEvents(events.data.filter((e) => new Date(e.start_date) >= now).length);
+
+      setFacilityCount(facilities.data.length);
+    }).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>Loading overview…</p>;
+
+  const volTotal = Object.values(volCounts).reduce((a, b) => a + b, 0);
+  const apptTotal = Object.values(apptCounts).reduce((a, b) => a + b, 0);
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 20 }}>
+        <StatCard label="Total raised" value={`KES ${donationTotal.toLocaleString()}`} sub={`${donationCount} donation${donationCount === 1 ? '' : 's'}`} />
+        <StatCard label="Volunteer applications" value={volTotal} sub={`${volCounts.PENDING || 0} awaiting review`} />
+        <StatCard label="Appointment requests" value={apptTotal} sub={`${apptCounts.PENDING || 0} awaiting response`} />
+        <StatCard label="Stories awaiting review" value={pendingStories} />
+        <StatCard label="Upcoming events" value={upcomingEvents} />
+        <StatCard label="Screening facilities" value={facilityCount} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+        <StatusBreakdown title="Volunteers by status" order={VOL_STATUS_ORDER} labels={VOL_STATUS_LABEL} counts={volCounts} />
+        <StatusBreakdown title="Appointments by status" order={APPT_STATUS_ORDER} labels={APPT_STATUS_LABEL} counts={apptCounts} />
+      </div>
+    </div>
+  );
+}
+
 function Table({ columns, children }) {
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -730,7 +837,7 @@ function EventsTab() {
 /* --------------------------------- Page --------------------------------- */
 
 export default function Admin() {
-  const [tab, setTab] = useState('facilities');
+  const [tab, setTab] = useState('overview');
 
   return (
     <div className="page container">
@@ -738,7 +845,8 @@ export default function Admin() {
         <h2>Admin console</h2>
         <p>Manage screening facilities, volunteer applications, and Info Hub content.</p>
       </div>
-      <div className="tabs" style={{ maxWidth: 820 }}>
+      <div className="tabs" style={{ maxWidth: 900 }}>
+        <button className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>Overview</button>
         <button className={tab === 'facilities' ? 'active' : ''} onClick={() => setTab('facilities')}>Facilities</button>
         <button className={tab === 'volunteers' ? 'active' : ''} onClick={() => setTab('volunteers')}>Volunteers</button>
         <button className={tab === 'faqs' ? 'active' : ''} onClick={() => setTab('faqs')}>FAQ</button>
@@ -749,6 +857,7 @@ export default function Admin() {
         <button className={tab === 'appointments' ? 'active' : ''} onClick={() => setTab('appointments')}>Appointments</button>
       </div>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        {tab === 'overview' && <OverviewTab />}
         {tab === 'facilities' && <FacilitiesTab />}
         {tab === 'volunteers' && <VolunteersTab />}
         {tab === 'faqs' && <FaqTab />}

@@ -137,4 +137,17 @@ appointments, no admin-set reminder, no RSVPs, and 0 or 2+ vaccine doses
 simply sees "You're all caught up."
 
 ### Admin Dashboard
-Review volunteers, Donations overview, etc
+Done: added an Overview tab as the Admin console's new default landing
+tab. Every other tab was already a raw CRUD table with no totals, and
+donations had no admin visibility at all (the leaderboard only existed on
+the public Get Involved page) - Overview pulls together real counts from
+the same endpoints the other tabs already call: total amount raised and
+donation count, volunteer applications and appointment requests by
+status, stories awaiting review, upcoming events, and total facilities.
+No new backend endpoints or packages: every admin viewset already returns
+the full list to an ADMIN, so the counts are computed client-side from
+data already being fetched elsewhere in the console. Built with the same
+legacy `theme.css` classes as the rest of Admin.jsx rather than Tailwind,
+since redesigning one tab in the new system while the other eight stay
+old would look inconsistent inside a single tab-switcher; a full
+Tailwind redesign of the Admin console is separate future work if wanted.
